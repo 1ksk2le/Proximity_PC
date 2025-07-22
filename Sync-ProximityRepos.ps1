@@ -1,7 +1,7 @@
 # Sync-ProximityRepos.ps1
 # Run this from your Proximity_PC repo folder
 
-$mainRepoPath = "..\\Proximity"  # Adjust path if needed
+$mainRepoPath = "C:\Users\doguk\Desktop\Proximity"  # Adjust path if needed
 
 # Stage and commit all changes in Proximity_PC
 git add -A
