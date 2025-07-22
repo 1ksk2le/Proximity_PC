@@ -20,36 +20,11 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/Font_Test.spritefont
 
-#begin Fonts/Font_Test.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Fonts/Font_Test.spritefont
-
 #begin Shaders/Grayscale.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/Grayscale.fx
-
-#begin Shaders/Grayscale.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/Grayscale.fx
-
-#begin Textures/Items/t_Item_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_0.png
 
 #begin Textures/Items/t_Item_0.png
 /importer:TextureImporter
@@ -75,30 +50,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_1.png
 
-#begin Textures/Items/t_Item_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_1.png
-
-#begin Textures/Items/t_Item_10.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_10.png
-
 #begin Textures/Items/t_Item_10.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -122,30 +73,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_11.png
-
-#begin Textures/Items/t_Item_11.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_11.png
-
-#begin Textures/Items/t_Item_12.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_12.png
 
 #begin Textures/Items/t_Item_12.png
 /importer:TextureImporter
@@ -171,7 +98,7 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_13.png
 
-#begin Textures/Items/t_Item_2.png
+#begin Textures/Items/t_Item_14.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -181,7 +108,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_2.png
+/build:Textures/Items/t_Item_14.png
 
 #begin Textures/Items/t_Item_2.png
 /importer:TextureImporter
@@ -207,18 +134,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_3.png
 
-#begin Textures/Items/t_Item_3.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_3.png
-
 #begin Textures/Items/t_Item_4.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -230,30 +145,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_4.png
-
-#begin Textures/Items/t_Item_4.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_4.png
-
-#begin Textures/Items/t_Item_5.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_5.png
 
 #begin Textures/Items/t_Item_5.png
 /importer:TextureImporter
@@ -279,18 +170,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_6.png
 
-#begin Textures/Items/t_Item_6.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_6.png
-
 #begin Textures/Items/t_Item_7.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -302,30 +181,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_7.png
-
-#begin Textures/Items/t_Item_7.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_7.png
-
-#begin Textures/Items/t_Item_8.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_8.png
 
 #begin Textures/Items/t_Item_8.png
 /importer:TextureImporter
@@ -351,18 +206,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_9.png
 
-#begin Textures/Items/t_Item_9.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Items/t_Item_9.png
-
 #begin Textures/NPCs/t_NPC_0.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -374,30 +217,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/NPCs/t_NPC_0.png
-
-#begin Textures/NPCs/t_NPC_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/NPCs/t_NPC_0.png
-
-#begin Textures/NPCs/t_NPC_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/NPCs/t_NPC_1.png
 
 #begin Textures/NPCs/t_NPC_1.png
 /importer:TextureImporter
@@ -423,18 +242,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_0.png
 
-#begin Textures/Particles/t_Particle_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_0.png
-
 #begin Textures/Particles/t_Particle_1.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -446,30 +253,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_1.png
-
-#begin Textures/Particles/t_Particle_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_1.png
-
-#begin Textures/Particles/t_Particle_2.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_2.png
 
 #begin Textures/Particles/t_Particle_2.png
 /importer:TextureImporter
@@ -495,30 +278,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_3.png
 
-#begin Textures/Particles/t_Particle_3.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_3.png
-
-#begin Textures/Particles/t_Particle_4.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_4.png
-
 #begin Textures/Particles/t_Particle_4.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -542,30 +301,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_5.png
-
-#begin Textures/Particles/t_Particle_5.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_5.png
-
-#begin Textures/Particles/t_Particle_6.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Particles/t_Particle_6.png
 
 #begin Textures/Particles/t_Particle_6.png
 /importer:TextureImporter
@@ -590,6 +325,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_7.png
+
+#begin Textures/Particles/t_Particle_8.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Particles/t_Particle_8.png
 
 #begin Textures/Player/t_Player_Body.png
 /importer:TextureImporter
@@ -639,18 +386,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Player/t_PlayerBody.png
 
-#begin Textures/Player/t_PlayerBody.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Player/t_PlayerBody.png
-
 #begin Textures/Player/t_PlayerEye.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -662,30 +397,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Player/t_PlayerEye.png
-
-#begin Textures/Player/t_PlayerEye.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Player/t_PlayerEye.png
-
-#begin Textures/Player/t_PlayerHead.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Player/t_PlayerHead.png
 
 #begin Textures/Player/t_PlayerHead.png
 /importer:TextureImporter
@@ -711,18 +422,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Projectiles/t_Projectile_0.png
 
-#begin Textures/Projectiles/t_Projectile_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Projectiles/t_Projectile_0.png
-
 #begin Textures/Projectiles/t_Projectile_1.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -734,30 +433,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Projectiles/t_Projectile_1.png
-
-#begin Textures/Projectiles/t_Projectile_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Projectiles/t_Projectile_1.png
-
-#begin Textures/Projectiles/t_Projectile_2.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Projectiles/t_Projectile_2.png
 
 #begin Textures/Projectiles/t_Projectile_2.png
 /importer:TextureImporter
@@ -783,18 +458,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Tiles/t_Tile_0.png
 
-#begin Textures/Tiles/t_Tile_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Tiles/t_Tile_0.png
-
 #begin Textures/Tiles/t_Tile_1.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -806,30 +469,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Tiles/t_Tile_1.png
-
-#begin Textures/Tiles/t_Tile_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Tiles/t_Tile_1.png
-
-#begin Textures/Tiles/t_Tile_2.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Tiles/t_Tile_2.png
 
 #begin Textures/Tiles/t_Tile_2.png
 /importer:TextureImporter
@@ -855,18 +494,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Tiles/t_Tile_3.png
 
-#begin Textures/Tiles/t_Tile_3.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/Tiles/t_Tile_3.png
-
 #begin Textures/UI/Heart.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -878,30 +505,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/UI/Heart.png
-
-#begin Textures/UI/Heart.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/Heart.png
-
-#begin Textures/UI/t_Bloom.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_Bloom.png
 
 #begin Textures/UI/t_Bloom.png
 /importer:TextureImporter
@@ -1071,30 +674,6 @@
 /processorParam:TextureFormat=Color
 /build:Textures/UI/t_JoystickBase.png
 
-#begin Textures/UI/t_JoystickBase.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_JoystickBase.png
-
-#begin Textures/UI/t_JoystickJump.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_JoystickJump.png
-
 #begin Textures/UI/t_JoystickJump.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1118,30 +697,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/UI/t_JoystickKnob.png
-
-#begin Textures/UI/t_JoystickKnob.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_JoystickKnob.png
-
-#begin Textures/UI/t_JoystickKnobShadow.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_JoystickKnobShadow.png
 
 #begin Textures/UI/t_JoystickKnobShadow.png
 /importer:TextureImporter
