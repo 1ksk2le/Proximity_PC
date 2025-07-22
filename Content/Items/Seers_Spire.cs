@@ -47,6 +47,11 @@ namespace Proximity.Content.Items
             ShootSpeed = 400f;
         }
 
+        private void Log(string message)
+        {
+            Console.WriteLine($"[Seers_Spire] {message}");
+        }
+
         public override void Update(float deltaTime, GameTime gameTime, Player player)
         {
             base.Update(deltaTime, gameTime, player);
@@ -97,6 +102,9 @@ namespace Proximity.Content.Items
                     float randomOffset = MathHelper.ToRadians((float)(random.NextDouble() * 20 - 10));
                     float finalAngle = baseAngle + randomOffset;
                     Vector2 randomizedDir = new Vector2((float)Math.Cos(finalAngle), (float)Math.Sin(finalAngle));
+
+                    Log($"Releasing Soul: Offset={soul.Offset}, Direction={randomizedDir}, SpawnPos={spawnPos}");
+
                     projectile.NewProjectile(
                         2,
                         0,
@@ -110,6 +118,7 @@ namespace Proximity.Content.Items
                 }
                 orbitingSouls.Clear();
             }
+
             wasAttackingLastFrame = player.IsAttacking;
 
             float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;
@@ -153,11 +162,11 @@ namespace Proximity.Content.Items
                     1,
                     new Rectangle((int)(soulPos.X), (int)(soulPos.Y), 1, 1),
                     Vector2.Zero,
-                    0.1f,
+                    0.2f,
                     new Color(0, 226, 189, 220),
                     new Color(149, 33, 77, 220),
                     scale * .74f * player.CurrentScale,
-                    8f,
+                    1f,
                     drawLayer,
                     false,
                     1,
@@ -192,7 +201,7 @@ namespace Proximity.Content.Items
                     new Color(0, 226, 189, 110),
                     new Color(149, 33, 77, 110),
                     0.8f * player.CurrentScale,
-                    0.1f,
+                    0.01f,
                     drawLayer,
                     false,
                     0,

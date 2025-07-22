@@ -32,15 +32,10 @@ namespace Proximity.Content.Items
         public override void Update(float deltaTime, GameTime gameTime, Player player)
         {
             base.Update(deltaTime, gameTime, player);
-            float weaponTip = 1.6f;
-            Vector2 muzzlePosition = player.WeaponHitbox.Center.ToVector2() + new Vector2(
+            Vector2 muzzlePosition = player.WeaponHitbox.GetCenter() + new Vector2(
                 (float)Math.Cos(player.WeaponHitboxRotation),
                 (float)Math.Sin(player.WeaponHitboxRotation)
-            ) * (player.WeaponHitbox.Height * weaponTip * (player.IsFacingLeft ? -1f : 1f));
-            Vector2 playerCenter = player.Hitbox.Center.ToVector2();
-            Vector2 intendedTarget = playerCenter + player.AttackDirection * 1000f;
-            Vector2 correctedDirection = Vector2.Normalize(intendedTarget - muzzlePosition);
-            float baseAngle = (float)Math.Atan2(correctedDirection.Y, correctedDirection.X);
+            ) * (player.WeaponHitbox.Width * 0.5f * (player.IsFacingLeft ? -1f : 1f));
             lastMuzzlePosition = muzzlePosition;
 
             if (smokeTimer > 0f && !player.IsAttacking && random.Next(2) == 0)
@@ -124,6 +119,22 @@ namespace Proximity.Content.Items
                     (int)DrawLayer.AbovePlayer,
                     true,
                     1,
+                    player,
+                    true,
+                    angle
+                );
+                particle.NewParticle(
+                    4,
+                    new Rectangle((int)muzzleOrigin.X, (int)muzzleOrigin.Y, 0, 0),
+                    velocity,
+                    0.4f,
+                    new Color(255, 70, 0, 100),
+                    Color.DimGray,
+                    random.NextFloat(0.2f, 1.5f),
+                    random.NextFloat(2f, 4f),
+                    (int)DrawLayer.AbovePlayer,
+                    false,
+                    0,
                     player,
                     true,
                     angle

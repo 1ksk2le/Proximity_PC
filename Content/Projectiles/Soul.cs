@@ -54,16 +54,16 @@ namespace Proximity.Content.Projectiles
                 1,
                 Hitbox(),
                 Vector2.Zero,
-                0.1f,
+                0.2f,
                 new Color(0, 226, 189, 220),
                 new Color(149, 33, 77, 220),
                 0.9f * Scale,
-                5f,
+                1.5f,
                 (int)DrawLayer.AbovePlayer,
                 false,
                 1,
                 this,
-                false,
+                true,
                 0f
             );
         }
