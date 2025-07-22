@@ -82,10 +82,10 @@ namespace Proximity
         {
             graphics = new GraphicsDeviceManager(this)
             {
-                IsFullScreen = true,
+                IsFullScreen = false,
                 PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
                 PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height,
-                SynchronizeWithVerticalRetrace = false
+                SynchronizeWithVerticalRetrace = true
             };
             Content.RootDirectory = CONTENT_ROOT;
             IsMouseVisible = true;
@@ -453,6 +453,7 @@ namespace Proximity
             {
                 Random random = new Random();
                 npcProperties.NewNPC(0, new Vector2(random.NextFloat(player.Position.X - 200, player.Position.X + 200), random.NextFloat(player.Position.Y - 200, player.Position.Y + 200)));
+                npcProperties.NewNPC(1, new Vector2(1000, 1000));
             }
             if (InputManager.Instance.IsKeySinglePress(Keys.F4))
             {

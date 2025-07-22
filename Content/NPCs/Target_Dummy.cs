@@ -16,7 +16,7 @@ namespace Proximity.Content.NPCs
         {
             ID = 1;
             Name = "Target Dummy";
-            MaxHealth = 100;
+            MaxHealth = 1000000;
             Damage = 0;
             Defense = 0;
             Knockback = 0f;

@@ -114,8 +114,8 @@ namespace Proximity.Content.Items
             Vector2 spawnPosition = player.WeaponHitbox.Center.ToVector2() + velocityDir * player.WeaponHitbox.Height * 0.5f;
 
             Vector2 playerCenter = player.Hitbox.Center.ToVector2();
-            Vector2 intendedTarget = playerCenter + direction * 200f;
-            Vector2 correctedDirection = Vector2.Normalize(intendedTarget - playerCenter);
+            Vector2 intendedTarget = playerCenter + direction * 1000f;
+            Vector2 correctedDirection = Vector2.Normalize(intendedTarget - spawnPosition);
 
             projectile.NewProjectile(0, 0, Damage, Knockback, ShootSpeed, 1f, spawnPosition, correctedDirection);
         }

@@ -26,7 +26,7 @@ namespace Proximity.Content
         public bool NoGravity;
         public bool IsActive;
         public float CurrentLifeTime;
-        public float LifeTime;
+        public float TotalLifeTime;
         public bool HasTrail;
         public int AI;
         public int Frame;
@@ -54,7 +54,7 @@ namespace Proximity.Content
             IsActive = true;
             CurrentLifeTime = 0f;
             ColorFade = colorFade;
-            LifeTime = lifeTime;
+            TotalLifeTime = lifeTime;
             HasTrail = hasTrail;
             AI = ai;
             Owner = null;
@@ -78,7 +78,7 @@ namespace Proximity.Content
             IsActive = false;
             CurrentLifeTime = 0f;
             ColorFade = 0f;
-            LifeTime = 1f;
+            TotalLifeTime = 1f;
             HasTrail = false;
             AI = 0;
             Frame = 0;
@@ -114,7 +114,7 @@ namespace Proximity.Content
 
             CurrentLifeTime += deltaTime;
 
-            if (CurrentLifeTime >= LifeTime)
+            if (CurrentLifeTime >= TotalLifeTime)
             {
                 IsActive = false;
                 return;
@@ -134,15 +134,49 @@ namespace Proximity.Content
 
             if (AI == 1)
             {
-                float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (LifeTime * 3f), 0f, 1f);
+                float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (TotalLifeTime * 3f), 0f, 1f);
                 Scale = MathHelper.Lerp(Scale, 0f, lerpAmount);
+            }
+            if (AI == 2)
+            {
+                float ejectPhase = TotalLifeTime * 0.015f;
+                float fallPhase = TotalLifeTime * 0.075f;
+
+                if (CurrentLifeTime <= 0.01f)
+                {
+                }
+
+                if (CurrentLifeTime <= ejectPhase)
+                {
+                    Velocity.Y -= 3f;
+                    if (Owner is Player player && player.CurrentHealth > 0)
+                    {
+                        Velocity.X -= 2f * (player.IsFacingLeft ? -1f : 1f);
+                    }
+                }
+                else if (CurrentLifeTime <= ejectPhase + fallPhase)
+                {
+                    Velocity.Y += 1.5f;
+                }
+                else
+                {
+                    Velocity = Vector2.Zero;
+                }
+
+                if (CurrentLifeTime <= ejectPhase + fallPhase)
+                {
+                    Random random = new Random();
+                    Rotation += (float)random.NextDouble() * 0.5f - 0.05f;
+                }
+
+                Position += Velocity * deltaTime;
             }
         }
 
         public Color GetCurrentColor()
         {
             if (StartColor == EndColor) return StartColor;
-            float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (LifeTime * ColorFade), 0f, 1f);
+            float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (TotalLifeTime * ColorFade), 0f, 1f);
             return Color.Lerp(StartColor, EndColor, lerpAmount);
         }
 
@@ -150,8 +184,8 @@ namespace Proximity.Content
         {
             if (!IsActive || texture == null) return;
 
-            Color drawColor = GetCurrentColor();
-            float invLifeTime = LifeTime > 0f ? 1f / LifeTime : 1f;
+            Color drawColor = AI == 2 ? Color.White : GetCurrentColor();
+            float invLifeTime = TotalLifeTime > 0f ? 1f / TotalLifeTime : 1f;
             float alpha = 1f - (CurrentLifeTime * invLifeTime);
             alpha = MathHelper.Clamp(alpha, 0f, 1f);
             float layerDepth = DrawLayer == 0 ? 0.6f : 0.4f;
@@ -309,7 +343,7 @@ namespace Proximity.Content
             particle.StartColor = startColor;
             particle.EndColor = endColor;
             particle.Scale = scale;
-            particle.LifeTime = lifeTime;
+            particle.TotalLifeTime = lifeTime;
             particle.DrawLayer = drawLayer;
             particle.CurrentLifeTime = 0f;
             particle.ColorFade = colorFade;
@@ -358,7 +392,7 @@ namespace Proximity.Content
                     }
 
                     particle.CurrentLifeTime += deltaTime;
-                    if (particle.CurrentLifeTime >= particle.LifeTime)
+                    if (particle.CurrentLifeTime >= particle.TotalLifeTime)
                     {
                         particle.IsActive = false;
                         ReturnParticleToPool(particle);

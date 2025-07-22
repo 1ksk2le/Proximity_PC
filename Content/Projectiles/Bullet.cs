@@ -64,7 +64,7 @@ namespace Proximity.Content.Projectiles
         {
             if (Texture != null && positionHistory.Count > 0)
             {
-                float lifeTimeRatio = CurrentLifeTime / LifeTime;
+                float lifeTimeRatio = CurrentLifeTime / TotalLifeTime;
                 int startIdx = 0;
                 if (lifeTimeRatio > FadeOutStartTime)
                 {
@@ -121,7 +121,7 @@ namespace Proximity.Content.Projectiles
                     random.NextFloat(0.5f, 0.8f) * Scale,
                     random.NextFloat(1.5f, 25f),
                     (int)DrawLayer.AbovePlayer,
-                    true,
+                    false,
                     1,
                     null,
                     true,

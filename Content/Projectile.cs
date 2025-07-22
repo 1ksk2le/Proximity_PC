@@ -19,7 +19,7 @@ namespace Proximity.Content
         public int Penetrate { get; set; }
         public string Name { get; protected set; }
         public float Rotation { get; protected set; }
-        public float LifeTime { get; set; }
+        public float TotalLifeTime { get; set; }
         public float Speed { get; set; }
         public float Knockback { get; set; }
         public float CurrentLifeTime { get; set; }
@@ -94,7 +94,7 @@ namespace Proximity.Content
 
             CurrentLifeTime += deltaTime;
 
-            if (CurrentLifeTime >= LifeTime || Penetrate <= 0)
+            if (CurrentLifeTime >= TotalLifeTime || Penetrate <= 0)
             {
                 Kill();
                 return;

@@ -79,7 +79,7 @@ namespace Proximity.Content
             projectile.Damage = damage;
             projectile.Knockback = knockBack;
             projectile.Speed = speed;
-            projectile.LifeTime = lifeTime;
+            projectile.TotalLifeTime = lifeTime;
             projectile.CurrentLifeTime = 0f;
             projectile.Position = position;
             projectile.Direction = direction;
@@ -102,7 +102,7 @@ namespace Proximity.Content
             while (i < activeProjectiles.Count)
             {
                 var projectile = activeProjectiles[i];
-                if (!projectile.IsActive || projectile.CurrentLifeTime >= projectile.LifeTime)
+                if (!projectile.IsActive || projectile.CurrentLifeTime >= projectile.TotalLifeTime)
                 {
                     projectile.Kill();
                     projectile.IsActive = false;

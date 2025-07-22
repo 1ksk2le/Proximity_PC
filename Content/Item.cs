@@ -485,7 +485,7 @@ namespace Proximity.Content
 
             Vector2 bodyOrigin = new Vector2(player.T_Body.Width / 2f, player.T_Body.Height / 2f - player.T_Head.Height);
 
-            spriteBatch.Draw(Texture, drawPosition + player.CalculateKnockbackOffset(), null, Color.White, player.KnockbackRotation, bodyOrigin, player.CurrentScale,
+            spriteBatch.Draw(Texture, drawPosition + player.CalculateKnockbackOffset() + new Vector2((player.IsFacingLeft ? 1 : 6), 0), null, Color.White, player.KnockbackRotation, bodyOrigin, player.CurrentScale,
                 player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
         }
 
