@@ -128,7 +128,7 @@ namespace Proximity.Content.Projectiles
                     angle
                 );
             }
-
+            positionHistory.Clear();
             base.Kill();
         }
     }
