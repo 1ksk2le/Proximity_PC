@@ -456,7 +456,16 @@ namespace Proximity
             }
             if (InputManager.Instance.IsKeySinglePress(Keys.F4))
             {
+                // F4 cycles next (legacy), E for next, Q for previous
                 CycleItemInSlot(EquipmentSlot.Weapon);
+            }
+            if (InputManager.Instance.IsKeySinglePress(Keys.E))
+            {
+                CycleItemInSlot(EquipmentSlot.Weapon, true); // true = next
+            }
+            if (InputManager.Instance.IsKeySinglePress(Keys.Q))
+            {
+                CycleItemInSlot(EquipmentSlot.Weapon, false); // false = previous
             }
             if (InputManager.Instance.IsKeySinglePress(Keys.F5))
             {
@@ -931,14 +940,34 @@ namespace Proximity
 
         private void CycleItemInSlot(EquipmentSlot slot)
         {
+            CycleItemInSlot(slot, true); // default to next
+        }
+
+        // Overload for direction: true = next, false = previous
+        private void CycleItemInSlot(EquipmentSlot slot, bool next)
+        {
             var currentItem = player.EquipmentItems[slot];
             int currentId = currentItem?.ID ?? 0;
-
-            int nextId = FindNextItemId(currentId, slot);
-            if (nextId != currentId)
+            int newId = next ? FindNextItemId(currentId, slot) : FindPreviousItemId(currentId, slot);
+            if (newId != currentId)
             {
-                player.EquipItem(nextId);
+                player.EquipItem(newId);
             }
+        }
+
+        private int FindPreviousItemId(int currentId, EquipmentSlot slot)
+        {
+            var availableItems = itemProperties.Items.Values;
+            var slotItems = availableItems.Where(item =>
+                (item.Type.StartsWith("[Weapon") && slot == EquipmentSlot.Weapon) ||
+                (item.Type.StartsWith("[Offhand") && slot == EquipmentSlot.Offhand)
+            ).ToList();
+
+            if (slotItems.Count == 0) return currentId;
+
+            int currentIndex = slotItems.FindIndex(item => item.ID == currentId);
+            int prevIndex = (currentIndex - 1 + slotItems.Count) % slotItems.Count;
+            return slotItems[prevIndex].ID;
         }
 
         private int FindNextItemId(int currentId, EquipmentSlot slot)

@@ -61,7 +61,7 @@ namespace Proximity.Content.Items
                         (int)DrawLayer.AbovePlayer,
                         false,
                         0,
-                        null,
+                        player,
                         true,
                         0f
                     );
@@ -96,8 +96,8 @@ namespace Proximity.Content.Items
             ) * (player.WeaponHitbox.Height * weaponTip * (player.IsFacingLeft ? -1f : 1f));
 
             Vector2 playerCenter = player.Hitbox.Center.ToVector2();
-            Vector2 intendedTarget = playerCenter + direction * 1000f;
-            Vector2 correctedDirection = Vector2.Normalize(intendedTarget - spawnPosition);
+            Vector2 intendedTarget = playerCenter + direction * 200f;
+            Vector2 correctedDirection = Vector2.Normalize(intendedTarget - playerCenter);
 
             projectile.NewProjectile(1, 0, Damage, Knockback, ShootSpeed, 1f, spawnPosition, correctedDirection);
 
@@ -124,7 +124,7 @@ namespace Proximity.Content.Items
                     (int)DrawLayer.AbovePlayer,
                     true,
                     1,
-                    null,
+                    player,
                     true,
                     angle
                 );

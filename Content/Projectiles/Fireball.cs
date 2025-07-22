@@ -22,6 +22,25 @@ namespace Proximity.Content.Projectiles
         public override void Update(float deltaTime, Player player)
         {
             base.Update(deltaTime, player);
+            if (random.Next(2) == 0)
+            {
+                particle.NewParticle(
+                4,
+                Hitbox(),
+                Vector2.Zero,
+                0.4f,
+                new Color(255, 70, 0, 100),
+                Color.DimGray,
+                random.NextFloat(0.2f, 1.5f) * Scale,
+                random.NextFloat(2f, 4f),
+                (int)DrawLayer.AbovePlayer,
+                false,
+                0,
+                null,
+                true,
+                0f
+                );
+            }
 
             var p = particle.NewParticle(
                 1,
