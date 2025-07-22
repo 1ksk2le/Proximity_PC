@@ -34,6 +34,7 @@ namespace Proximity.Content
         public DrawSlot DrawSlot { get; protected set; }
         public float UseTime { get; protected set; }
         public float ShootSpeed { get; set; }
+        public float Recoil { get; set; }
         public float Knockback { get; set; }
         public float KnockbackResistance { get; set; }
         public string Name { get; protected set; }
@@ -317,12 +318,12 @@ namespace Proximity.Content
                     ), angle);
                 }
             }
-            else if (Type == "[Weapon - Gun]")
+            else if (Type == "[Weapon - Rifle]" || Type == "[Weapon - Pistol]")
             {
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
 
-                float offsetX = (player.T_Body.Width * 0.5f) * (player.IsFacingLeft ? -1f : 1f);
+                float offsetX = (player.T_Body.Width * (Type == "[Weapon - Rifle]" ? 0.2f : 0.5f)) * (player.IsFacingLeft ? -1f : 1f);
                 float offsetY = player.T_Body.Height * 0.3f - Texture.Height * 0.5f;
                 Vector2 offset = new Vector2(offsetX, offsetY);
 
@@ -336,10 +337,9 @@ namespace Proximity.Content
                 float angle;
                 if (player.IsAttacking)
                 {
-                    float recoilAmount = ShootSpeed / 1500f;
                     float attackProgress = 1f - (player.AttackTimer / UseTime);
                     float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);
-                    float recoil = recoilAmount * (float)Math.Sin(attackProgress * MathHelper.Pi);
+                    float recoil = Recoil * (float)Math.Sin(attackProgress * MathHelper.Pi);
                     angle = player.IsFacingLeft ? MathHelper.Pi + baseAngle + recoil : baseAngle - recoil;
                 }
                 else
@@ -616,7 +616,7 @@ namespace Proximity.Content
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
 
-                float offsetX = (player.T_Body.Width * 0.5f) * (player.IsFacingLeft ? -1f : 1f);
+                float offsetX = (player.T_Body.Width * (Type == "[Weapon - Rifle]" ? 0.2f : 0.5f)) * (player.IsFacingLeft ? -1f : 1f);
                 float offsetY = player.T_Body.Height * 0.3f - Texture.Height * 0.5f;
                 Vector2 offset = new Vector2(offsetX, offsetY);
 
@@ -633,22 +633,22 @@ namespace Proximity.Content
             }
         }
 
-        protected void DrawGunAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player, float recoilAmount)
+        protected void DrawGunAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player)
         {
             if (player.IsAttacking)
             {
                 float attackProgress = 1f - (player.AttackTimer / UseTime);
                 float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);
 
-                float recoil = recoilAmount * (float)Math.Sin(attackProgress * MathHelper.Pi);
+                float recoil = Recoil * (float)Math.Sin(attackProgress * MathHelper.Pi);
 
                 float attackRotation = player.IsFacingLeft ? MathHelper.Pi + baseAngle + recoil : baseAngle - recoil;
 
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
 
-                float offsetX = (player.T_Body.Width * 0.5f) * (player.IsFacingLeft ? -1f : 1f);
-                float offsetY = player.T_Body.Height * 0.3f - Texture.Height / 2f;
+                float offsetX = (player.T_Body.Width * (Type == "[Weapon - Rifle]" ? 0.2f : 0.5f)) * (player.IsFacingLeft ? -1f : 1f);
+                float offsetY = player.T_Body.Height * 0.3f - Texture.Height * 0.5f;
                 Vector2 offset = new Vector2(offsetX, offsetY);
 
                 float jumpProgress = player.IsJumping ? 1f - (player.jumpTime / Player.JUMP_TIME_VALUE) : 0f;

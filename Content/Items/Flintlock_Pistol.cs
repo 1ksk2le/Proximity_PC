@@ -20,13 +20,14 @@ namespace Proximity.Content.Items
             Rarity = 2;
             Name = "Flintlock Pistol";
             Lore = "'Wild... wild... west...'";
-            Type = "[Weapon - Gun]";
+            Type = "[Weapon - Pistol]";
             Info = "Shoots a bullet";
             Value = 600;
             Damage = 6;
             UseTime = 0.55f;
             Knockback = 200f;
             ShootSpeed = 1200f;
+            Recoil = 0.35f;
         }
 
         public override void Update(float deltaTime, GameTime gameTime, Player player)
@@ -67,7 +68,7 @@ namespace Proximity.Content.Items
         public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
         {
             base.PreDraw(spriteBatch, gameTime, player);
-            DrawGunAttack(spriteBatch, gameTime, player, ShootSpeed / 1500f);
+            DrawGunAttack(spriteBatch, gameTime, player);
             DrawGunIdle(spriteBatch, gameTime, player);
         }
 
@@ -84,11 +85,10 @@ namespace Proximity.Content.Items
                 (float)Math.Cos(weaponRotation),
                 (float)Math.Sin(weaponRotation)
             );
-            float weaponTip = 1.25f;
             Vector2 spawnPosition = player.WeaponHitbox.Center.ToVector2() + new Vector2(
                 (float)Math.Cos(player.WeaponHitboxRotation),
                 (float)Math.Sin(player.WeaponHitboxRotation)
-            ) * (player.WeaponHitbox.Height * weaponTip * (player.IsFacingLeft ? -1f : 1f));
+            ) * (player.WeaponHitbox.Width * 0.5f * (player.IsFacingLeft ? -1f : 1f));
 
             Vector2 playerCenter = player.Hitbox.Center.ToVector2();
             Vector2 intendedTarget = playerCenter + direction * 1000f;

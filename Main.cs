@@ -562,8 +562,8 @@ namespace Proximity
             );
             if (!isPaused)
             {
-                joystickMovement.Draw(spriteBatch);
-                joystickAttack.Draw(spriteBatch);
+                //joystickMovement.Draw(spriteBatch);
+                //joystickAttack.Draw(spriteBatch);
                 DrawJumpButton();
                 fpsManager.Draw(spriteBatch);
                 DrawDebugButton();

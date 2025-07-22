@@ -25,6 +25,7 @@ namespace Proximity.Content
         public float CurrentLifeTime { get; set; }
         public float Scale { get; set; } = 1f;
         public Texture2D Texture { get; protected set; }
+        public Vector2 Velocity { get; set; }
         public Vector2 Position { get; set; }
         public Vector2 Direction { get; set; }
         public Vector2 HitboxOffset { get; protected set; }
@@ -105,6 +106,13 @@ namespace Proximity.Content
             {
                 Position += Vector2.Normalize(Direction) * deltaTime * Speed;
                 Rotation = (float)Math.Atan2(Direction.Y, Direction.X);
+            }
+            if (AI == 1)
+            {
+                Position += Vector2.Normalize(Direction) * deltaTime * Speed;
+                Velocity += new Vector2(0, 500f * deltaTime);
+                Position += Velocity * deltaTime;
+                Rotation = (float)Math.Atan2(Velocity.Y, Velocity.X);
             }
         }
 

@@ -84,6 +84,7 @@ namespace Proximity.Content
             projectile.CurrentLifeTime = 0f;
             projectile.Position = position;
             projectile.Direction = direction;
+            projectile.Velocity = baseProjectile.Velocity;
             projectile.Penetrate = baseProjectile.Penetrate;
             projectile.UniqueId = nextProjectileId++;
             activeProjectiles.Add(projectile);

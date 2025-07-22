@@ -110,6 +110,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Items/t_Item_14.png
 
+#begin Textures/Items/t_Item_15.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Items/t_Item_15.png
+
 #begin Textures/Items/t_Item_2.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -445,6 +457,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Projectiles/t_Projectile_2.png
+
+#begin Textures/Projectiles/t_Projectile_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Projectiles/t_Projectile_3.png
 
 #begin Textures/Tiles/t_Tile_0.png
 /importer:TextureImporter

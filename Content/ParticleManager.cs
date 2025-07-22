@@ -168,8 +168,27 @@ namespace Proximity.Content
                     Random random = new Random();
                     Rotation += (float)random.NextDouble() * 0.5f - 0.05f;
                 }
+            }
+            if (AI == 3)
+            {
+                float fallPhase = TotalLifeTime * 0.2f;
+                if (CurrentLifeTime <= 0.01f)
+                {
+                }
 
-                Position += Velocity * deltaTime;
+                if (CurrentLifeTime <= fallPhase)
+                {
+                    Velocity.Y += 1f;
+                }
+                else
+                {
+                    Velocity = Vector2.Zero;
+                }
+            }
+            if (AI == 4)
+            {
+                float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (TotalLifeTime * 2f), 0f, 1f);
+                Velocity = Vector2.Lerp(Velocity, Vector2.Zero, lerpAmount);
             }
         }
 
