@@ -82,7 +82,7 @@ namespace Proximity
         {
             graphics = new GraphicsDeviceManager(this)
             {
-                IsFullScreen = false,
+                IsFullScreen = true,
                 PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
                 PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height,
                 SynchronizeWithVerticalRetrace = false
@@ -567,11 +567,11 @@ namespace Proximity
                 DrawInventoryButton();
                 DrawSpawnButtons();
 
-                spriteBatch.Draw(Main.Pixel, PickupButtonRectangle, Color.LightGreen * 0.7f);
+                /*spriteBatch.Draw(Main.Pixel, PickupButtonRectangle, Color.LightGreen * 0.7f);
                 var text = "PICK UP";
                 var textSize = Font.MeasureString(text);
                 var textPos = new Vector2(PickupButtonRectangle.Center.X - textSize.X / 2, PickupButtonRectangle.Center.Y - textSize.Y / 2);
-                Font.DrawString(spriteBatch, text, textPos, Color.White);
+                Font.DrawString(spriteBatch, text, textPos, Color.White);*/
             }
             spriteBatch.Draw(pixel, PauseButtonRectangle, Color.Gray * 0.7f);
             var pauseText = "II";
@@ -843,24 +843,24 @@ namespace Proximity
 
         private void DrawDebugButton()
         {
-            var buttonColor = DebugMode ? Color.White : Color.Gray;
-            spriteBatch.Draw(pixel, debugButtonRectangle, buttonColor * DEBUG_BUTTON_OPACITY);
-            spriteBatch.DrawRectangleBorder(debugButtonRectangle, Color.White, Color.Black, 0f, DEBUG_BUTTON_BORDER);
+            /* var buttonColor = DebugMode ? Color.White : Color.Gray;
+             spriteBatch.Draw(pixel, debugButtonRectangle, buttonColor * DEBUG_BUTTON_OPACITY);
+             spriteBatch.DrawRectangleBorder(debugButtonRectangle, Color.White, Color.Black, 0f, DEBUG_BUTTON_BORDER);
 
-            var textPosition = new Vector2(debugButtonRectangle.X + 5, debugButtonRectangle.Y + 10);
-            Font.DrawString(
-                spriteBatch,
-                "DBG",
-                textPosition,
-                buttonColor
-            );
+             var textPosition = new Vector2(debugButtonRectangle.X + 5, debugButtonRectangle.Y + 10);
+             Font.DrawString(
+                 spriteBatch,
+                 "DBG",
+                 textPosition,
+                 buttonColor
+             );
 
-            DrawDebugItemMenu();
+             DrawDebugItemMenu();*/
         }
 
         private void DrawSpawnButtons()
         {
-            spriteBatch.Draw(pixel, spawnItemButtonRectangle, Color.Red);
+            /*spriteBatch.Draw(pixel, spawnItemButtonRectangle, Color.Red);
             spriteBatch.Draw(pixel, spawnNPCButtonRectangle, Color.Blue);
 
             var textPosition = new Vector2(spawnItemButtonRectangle.X + 5, spawnItemButtonRectangle.Y + 10);
@@ -878,7 +878,7 @@ namespace Proximity
                 Color.White
             );
 
-            DrawDebugItemMenu();
+            DrawDebugItemMenu();*/
         }
 
         private void DrawDebugItemMenu()
@@ -916,16 +916,16 @@ namespace Proximity
 
         private void DrawInventoryButton()
         {
-            Color buttonColor = inventory.IsOpen ? Color.White : Color.Gray;
-            spriteBatch.Draw(pixel, inventoryButtonRectangle, buttonColor * 0.85f);
-            spriteBatch.DrawRectangleBorder(inventoryButtonRectangle, Color.White, Color.Black, 0f, 2);
-            var text = inventory.IsOpen ? "CLOSE" : "INV";
-            var textSize = Font.MeasureString(text);
-            var textPos = new Vector2(
-                inventoryButtonRectangle.X + (inventoryButtonRectangle.Width - textSize.X) / 2,
-                inventoryButtonRectangle.Y + (inventoryButtonRectangle.Height - textSize.Y) / 2
-            );
-            Font.DrawString(spriteBatch, text, textPos, Color.White);
+            /* Color buttonColor = inventory.IsOpen ? Color.White : Color.Gray;
+             spriteBatch.Draw(pixel, inventoryButtonRectangle, buttonColor * 0.85f);
+             spriteBatch.DrawRectangleBorder(inventoryButtonRectangle, Color.White, Color.Black, 0f, 2);
+             var text = inventory.IsOpen ? "CLOSE" : "INV";
+             var textSize = Font.MeasureString(text);
+             var textPos = new Vector2(
+                 inventoryButtonRectangle.X + (inventoryButtonRectangle.Width - textSize.X) / 2,
+                 inventoryButtonRectangle.Y + (inventoryButtonRectangle.Height - textSize.Y) / 2
+             );
+             Font.DrawString(spriteBatch, text, textPos, Color.White);*/
         }
 
         private Rectangle GetJumpButtonRectangle()
