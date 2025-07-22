@@ -29,7 +29,7 @@ namespace Proximity.Content.Projectiles
             ID = 1;
             Name = "Bullet";
             positionHistory.Clear();
-            previousPosition = Position;
+            previousPosition = Vector2.Zero; // Reset to neutral state
             Scale = 1f;
         }
 
@@ -129,6 +129,7 @@ namespace Proximity.Content.Projectiles
                 );
             }
             positionHistory.Clear();
+            previousPosition = Vector2.Zero; // Reset to neutral state
             base.Kill();
         }
     }
