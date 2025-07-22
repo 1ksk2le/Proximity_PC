@@ -105,9 +105,9 @@ namespace Proximity
 
         protected override void LoadContent()
         {
-            InitializeGraphics();
-            InitializeJoysticks();
-            InitializePlayer();
+            LoadGraphics();
+            LoadJoysticks();
+            LoadPlayer();
         }
 
         protected override void UnloadContent()
@@ -270,11 +270,14 @@ namespace Proximity
 
         private void InitializeGameObjects()
         {
+            var fontTexture = Content.Load<Texture2D>("Textures/UI/t_Font");
+            Font = new BitmapFont(fontTexture);
+
             Tile.InitializeTypes(Content);
             arena = new Arena();
             camera = new Camera(Vector2.Zero, arena.TileSize * arena.SizeX, arena.TileSize * arena.SizeY);
             particleManager = new ParticleManager(Content);
-            floatingTextManager = new FloatingTextManager();
+            floatingTextManager = new FloatingTextManager(Font);
             projectileProperties = new ProjectileProperties(Content, particleManager);
             npcProperties = new NPCProperties(Content, particleManager, floatingTextManager);
             itemProperties = new ItemProperties(Content, particleManager, projectileProperties);
@@ -298,7 +301,7 @@ namespace Proximity
             }
         }
 
-        private void InitializeGraphics()
+        private void LoadGraphics()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -312,7 +315,7 @@ namespace Proximity
             grayscaleEffect = Content.Load<Effect>("Shaders/Grayscale");
         }
 
-        private void InitializeJoysticks()
+        private void LoadJoysticks()
         {
             var movementPosition = new Vector2(
                 joystickBase.Width * JOYSTICK_OFFSET,
@@ -328,7 +331,7 @@ namespace Proximity
             joystickAttack = new Joystick(joystickBase, joystickKnob, joystickKnobShadow, attackPosition, JOYSTICK_SIZE);
         }
 
-        private void InitializePlayer()
+        private void LoadPlayer()
         {
             player = new Player(
                 joystickMovement,

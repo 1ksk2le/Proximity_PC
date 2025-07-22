@@ -30,6 +30,7 @@ namespace Proximity.Content
         public Vector2 HitboxOffset { get; protected set; }
         public float HitboxRotation => Rotation;
         public bool IsActive { get; set; }
+        public int UniqueId { get; set; }
 
         protected Projectile(ContentManager contentManager, ParticleManager particleManager)
         {

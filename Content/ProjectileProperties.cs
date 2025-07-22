@@ -16,6 +16,7 @@ namespace Proximity.Content
         private readonly ContentManager contentManager;
         private readonly ParticleManager particleManager;
         private const int InitialPoolSize = 200;
+        private static int nextProjectileId = 1;
         public IReadOnlyDictionary<int, Projectile> Projectiles => projectileDictionary;
         public IReadOnlyList<Projectile> ActiveProjectiles => activeProjectiles;
 
@@ -83,6 +84,8 @@ namespace Proximity.Content
             projectile.CurrentLifeTime = 0f;
             projectile.Position = position;
             projectile.Direction = direction;
+            projectile.Penetrate = baseProjectile.Penetrate;
+            projectile.UniqueId = nextProjectileId++;
             activeProjectiles.Add(projectile);
             return projectile;
         }

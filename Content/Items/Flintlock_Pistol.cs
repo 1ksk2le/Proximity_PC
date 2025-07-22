@@ -117,7 +117,7 @@ namespace Proximity.Content.Items
                     random.NextFloat(0.5f, 0.8f),
                     random.NextFloat(1.5f, 25f),
                     (int)DrawLayer.AbovePlayer,
-                    true,
+                    false,
                     1,
                     player,
                     true,

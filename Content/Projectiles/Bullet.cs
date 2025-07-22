@@ -31,6 +31,7 @@ namespace Proximity.Content.Projectiles
             positionHistory.Clear();
             previousPosition = Vector2.Zero; // Reset to neutral state
             Scale = 1f;
+            Penetrate = 1;
         }
 
         public override void Update(float deltaTime, Player player)
@@ -129,7 +130,7 @@ namespace Proximity.Content.Projectiles
                 );
             }
             positionHistory.Clear();
-            previousPosition = Vector2.Zero; // Reset to neutral state
+            previousPosition = Vector2.Zero;
             base.Kill();
         }
     }

@@ -24,7 +24,7 @@ namespace Proximity.Content.Items
             Info = "Shoots a range of bullets that will knock you back";
             Value = 1150;
             Damage = 8;
-            UseTime = 1f;
+            UseTime = 0.11f;
             Knockback = 250f;
             ShootSpeed = 1200f;
         }
@@ -159,7 +159,7 @@ namespace Proximity.Content.Items
                     1f,
                     Color.White,
                     Color.White,
-                    0.5f,
+                    0.6f,
                     30f,
                     (int)DrawLayer.BelowPlayer,
                     false,

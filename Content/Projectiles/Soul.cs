@@ -26,6 +26,7 @@ namespace Proximity.Content.Projectiles
             AI = -1;
             ID = 2;
             Name = "Soul";
+            Penetrate = 1;
         }
 
         public override void Update(float deltaTime, Player player)
@@ -86,19 +87,19 @@ namespace Proximity.Content.Projectiles
 
         public override void Kill()
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 32; i++)
             {
-                float angle = MathHelper.TwoPi * i / 12f;
-                Vector2 velocity = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 80f;
+                float angle = MathHelper.TwoPi * i / 16f;
+                Vector2 velocity = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 20f;
                 var burst = particle.NewParticle(
-                    6,
+                    4,
                     new Rectangle((int)Position.X - 5, (int)Position.Y - 5, 10, 10),
                     velocity,
-                    0.1f,
-                    new Color(0, 226, 189, 110),
+                    0.75f,
                     new Color(149, 33, 77, 220),
+                    new Color(0, 226, 189, 220),
                     0.6f * Scale,
-                    0.7f,
+                    2f,
                     (int)DrawLayer.AbovePlayer,
                     false,
                     0,

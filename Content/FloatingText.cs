@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Proximity.Content
@@ -16,17 +17,20 @@ namespace Proximity.Content
         public float Alpha;
         public Vector2 Velocity;
         public float Scale;
+        public bool Direct;
 
         private float totalLifetime;
         private Vector2 initialPosition;
+        private Vector2 offset;
 
         public object Owner { get; set; }
 
-        public FloatingText(string text, Vector2 position, Color startColor, Color endColor, float lifetime = 1.0f, object owner = null)
+        public FloatingText(string text, Vector2 position, Color startColor, Color endColor, float lifetime = 1.0f, object owner = null, Vector2? offset = null, bool direct = false)
         {
+            this.offset = offset ?? Vector2.Zero;
             Text = text;
-            Position = position;
-            initialPosition = position;
+            Position = position + this.offset;
+            initialPosition = position + this.offset;
             StartColor = startColor;
             EndColor = endColor;
             Lifetime = lifetime;
@@ -34,6 +38,7 @@ namespace Proximity.Content
             Velocity = new Vector2(0, -75f);
             totalLifetime = lifetime;
             Owner = owner;
+            Direct = direct;
         }
 
         public void Update(float deltaTime)
@@ -43,7 +48,7 @@ namespace Proximity.Content
 
             Alpha = MathHelper.Clamp(1f - t * t, 0f, 1f);
 
-            float popScale = MathHelper.Lerp(1f, 1.75f, (float)System.Math.Min(t, 1f));
+            float popScale = MathHelper.Lerp(0.5f, 1.25f, (float)Math.Min(t, 1f));
             Scale = popScale;
 
             Color currentColor = Color.Lerp(StartColor, EndColor, t * 2);
@@ -55,7 +60,7 @@ namespace Proximity.Content
                 if (posProp != null)
                 {
                     var ownerPos = (Vector2)posProp.GetValue(Owner);
-                    initialPosition = ownerPos;
+                    initialPosition = ownerPos + (Direct ? Vector2.Zero : offset);
                 }
             }
             Position = initialPosition + Velocity * (totalLifetime - Lifetime) * (1f - t * 0.2f);
@@ -68,9 +73,8 @@ namespace Proximity.Content
         {
             var drawColor = currentDrawColor * Alpha;
 
-            // Calculate the size of the text to determine the center
             Vector2 textSize = font.MeasureString(Text);
-            Vector2 origin = textSize / 2; // Set origin to the center of the text (unscaled)
+            Vector2 origin = textSize / 2;
 
             font.DrawString(spriteBatch, Text, Position, drawColor, Scale, origin);
         }
@@ -81,10 +85,45 @@ namespace Proximity.Content
     public class FloatingTextManager
     {
         private readonly List<FloatingText> texts = new List<FloatingText>();
+        private readonly Random random = new Random();
+        private readonly BitmapFont font;
 
-        public void Add(string text, Vector2 position, Color startColor, Color endColor, float lifetime = 1.0f, object owner = null)
+        public FloatingTextManager(BitmapFont font)
         {
-            texts.Add(new FloatingText(text, position, startColor, endColor, lifetime, owner));
+            this.font = font;
+        }
+
+        public void Add(string text, Vector2 position, Color startColor, Color endColor, float lifetime, object owner, bool direct)
+        {
+            float maxRadius = 70f;
+            int maxTries = 20;
+            Vector2 offset = Vector2.Zero;
+            Vector2 textSize = font.MeasureString(text);
+            RectangleF newRect = default;
+
+            for (int attempt = 0; attempt < maxTries; attempt++)
+            {
+                float angle = (float)(random.NextDouble() * MathHelper.TwoPi);
+                float radius = maxRadius * (float)random.NextDouble();
+                offset = new Vector2((float)System.Math.Cos(angle), (float)Math.Sin(angle)) * radius;
+                Vector2 candidatePos = position + offset;
+                newRect = new RectangleF(candidatePos.X - textSize.X / 2, candidatePos.Y - textSize.Y / 2, textSize.X, textSize.Y);
+
+                bool overlaps = false;
+                foreach (var t in texts)
+                {
+                    Vector2 otherSize = font.MeasureString(t.Text);
+                    RectangleF otherRect = new RectangleF(t.Position.X - otherSize.X / 2, t.Position.Y - otherSize.Y / 2, otherSize.X, otherSize.Y);
+                    if (newRect.Intersects(otherRect))
+                    {
+                        overlaps = true;
+                        break;
+                    }
+                }
+                if (!overlaps)
+                    break;
+            }
+            texts.Add(new FloatingText(text, position, startColor, endColor, lifetime, owner, offset, direct));
         }
 
         public void Update(float deltaTime)
@@ -101,6 +140,24 @@ namespace Proximity.Content
         {
             foreach (var text in texts)
                 text.Draw(spriteBatch, font);
+        }
+    }
+
+    public struct RectangleF
+    {
+        public float X, Y, Width, Height;
+
+        public RectangleF(float x, float y, float width, float height)
+        {
+            X = x; Y = y; Width = width; Height = height;
+        }
+
+        public bool Intersects(RectangleF other)
+        {
+            return !(other.X > X + Width ||
+                     other.X + other.Width < X ||
+                     other.Y > Y + Height ||
+                     other.Y + other.Height < Y);
         }
     }
 }

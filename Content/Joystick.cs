@@ -65,7 +65,7 @@
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            /*if (spriteBatch == null) throw new ArgumentNullException(nameof(spriteBatch));
+            if (spriteBatch == null) throw new ArgumentNullException(nameof(spriteBatch));
 
             Vector2 baseOrigin = new Vector2(baseTexture.Width / 2, baseTexture.Height / 2);
             Vector2 knobOrigin = new Vector2(knobTexture.Width / 2, knobTexture.Height / 2);
@@ -76,7 +76,7 @@
 
             spriteBatch.Draw(baseTexture, basePosition, null, baseColor, 0f, baseOrigin, 1f, SpriteEffects.None, 0f);
             spriteBatch.Draw(knobShadowTexture, knobPosition + shadowOffset, null, baseColor, 0f, knobOrigin, 1f, SpriteEffects.None, 0f);
-            spriteBatch.Draw(knobTexture, knobPosition, null, knobColor, 0f, knobOrigin, 1f, SpriteEffects.None, 0f);*/
+            spriteBatch.Draw(knobTexture, knobPosition, null, knobColor, 0f, knobOrigin, 1f, SpriteEffects.None, 0f);
         }
 
         private void UpdateKnobPosition(Vector2 touchPosition)

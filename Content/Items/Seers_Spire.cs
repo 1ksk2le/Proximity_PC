@@ -47,11 +47,6 @@ namespace Proximity.Content.Items
             ShootSpeed = 400f;
         }
 
-        private void Log(string message)
-        {
-            Console.WriteLine($"[Seers_Spire] {message}");
-        }
-
         public override void Update(float deltaTime, GameTime gameTime, Player player)
         {
             base.Update(deltaTime, gameTime, player);
@@ -102,9 +97,6 @@ namespace Proximity.Content.Items
                     float randomOffset = MathHelper.ToRadians((float)(random.NextDouble() * 20 - 10));
                     float finalAngle = baseAngle + randomOffset;
                     Vector2 randomizedDir = new Vector2((float)Math.Cos(finalAngle), (float)Math.Sin(finalAngle));
-
-                    Log($"Releasing Soul: Offset={soul.Offset}, Direction={randomizedDir}, SpawnPos={spawnPos}");
-
                     projectile.NewProjectile(
                         2,
                         0,
@@ -118,7 +110,6 @@ namespace Proximity.Content.Items
                 }
                 orbitingSouls.Clear();
             }
-
             wasAttackingLastFrame = player.IsAttacking;
 
             float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;

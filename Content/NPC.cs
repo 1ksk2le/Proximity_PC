@@ -129,7 +129,7 @@ namespace Proximity.Content
                 foreach (var proj in projectiles)
                 {
                     if (!proj.IsActive) continue;
-                    int projId = proj.GetHashCode();
+                    int projId = proj.UniqueId;
                     if (hitProjectiles.Contains(projId)) continue;
                     if (Collides(proj.Hitbox()) && !IsImmune)
                     {
@@ -264,7 +264,7 @@ namespace Proximity.Content
 
                 if (damage > 0 && floatingText != null)
                 {
-                    floatingText.Add($"-{damage}", TextureHitbox().Center.ToVector2() - new Vector2($"-{damage}".Length * -3, TextureHitbox().Height), Color.White, Color.Red, 1f, this);
+                    floatingText.Add($"-{damage}", TextureHitbox().Center.ToVector2() - new Vector2($"-{damage}".Length * -3, TextureHitbox().Height), Color.White, Color.Red, 1f, this, false);
                 }
             }
         }

@@ -17,6 +17,7 @@ namespace Proximity.Content.Projectiles
             ID = 0;
             Name = "Fireball";
             Scale = 1f;
+            Penetrate = 1;
         }
 
         public override void Update(float deltaTime, Player player)

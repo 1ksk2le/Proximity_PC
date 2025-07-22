@@ -632,6 +632,7 @@ namespace Proximity.Content
         }
 
         private int previousWheelValue = 0;
+
         public void Update(TouchCollection touches)
         {
             if (!IsOpen) return;
@@ -821,7 +822,8 @@ namespace Proximity.Content
                             Color.Red,
                             Color.Red,
                             1.2f,
-                            player
+                            player,
+                            true
                         );
                         return;
                     }

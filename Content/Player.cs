@@ -248,7 +248,7 @@ namespace Proximity.Content
         {
             if (!IsImmune)
             {
-                floatingText.Add($"-{damage}", PlayerSpriteHitbox.Center.ToVector2() + new Vector2($"-{damage}".Length * -3, -T_Body.Height), Color.White, Color.Red, 1f, this);
+                floatingText.Add($"-{damage}", PlayerSpriteHitbox.Center.ToVector2() + new Vector2($"-{damage}".Length * -3, -T_Body.Height), Color.White, Color.Red, 1f, this, true);
                 ApplyKnockback(direction, speed);
                 int effectiveDamage = Math.Max(0, damage - Defense);
                 currentHealth = Math.Max(0, currentHealth - effectiveDamage);
