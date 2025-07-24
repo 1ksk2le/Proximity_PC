@@ -28,20 +28,12 @@ namespace Proximity.Content
         public bool IsActive;
         public float CurrentLifeTime;
         public float TotalLifeTime;
-        public bool HasTrail;
         public int AI;
         public int Frame;
 
         public object Owner;
 
-        private const int MaxTrailLength = 10;
-        private const int TrailUpdateInterval = 4;
-        private Vector2[] trailPositions;
-        private int trailIndex;
-        private int trailCount;
-        private int frameCount;
-
-        public Particle(int id, Vector2 position, Vector2 velocity, float colorFade, Color startColor, Color endColor, float scale, int type, int drawLayer, float lifeTime, bool hasTrail = false, int ai = 0, float rotation = 0f, int frame = 0)
+        public Particle(int id, Vector2 position, Vector2 velocity, float colorFade, Color startColor, Color endColor, float scale, int type, int drawLayer, float lifeTime, int ai = 0, float rotation = 0f, int frame = 0)
         {
             ID = id;
             Position = position;
@@ -56,14 +48,9 @@ namespace Proximity.Content
             CurrentLifeTime = 0f;
             ColorFade = colorFade;
             TotalLifeTime = lifeTime;
-            HasTrail = hasTrail;
             AI = ai;
             Owner = null;
             Frame = frame;
-            trailPositions = new Vector2[MaxTrailLength];
-            trailIndex = 0;
-            trailCount = 0;
-            frameCount = 0;
         }
 
         public void Reset()
@@ -80,14 +67,8 @@ namespace Proximity.Content
             CurrentLifeTime = 0f;
             ColorFade = 0f;
             TotalLifeTime = 1f;
-            HasTrail = false;
             AI = 0;
             Frame = 0;
-            trailIndex = 0;
-            trailCount = 0;
-            frameCount = 0;
-            if (trailPositions == null) trailPositions = new Vector2[MaxTrailLength];
-            Array.Clear(trailPositions, 0, trailPositions.Length);
         }
 
         public void Update(float deltaTime)
@@ -125,13 +106,6 @@ namespace Proximity.Content
                 Velocity.Y += 0.5f;
 
             Position += Velocity * deltaTime;
-
-            if (HasTrail && (++frameCount % TrailUpdateInterval == 0))
-            {
-                trailPositions[trailIndex] = Position;
-                trailIndex = (trailIndex + 1) % MaxTrailLength;
-                if (trailCount < MaxTrailLength) trailCount++;
-            }
 
             if (AI == 1)
             {
@@ -215,20 +189,6 @@ namespace Proximity.Content
                 origin = new Vector2(texture.Width / 2f, frameHeight / 2f);
             }
 
-            if (HasTrail && trailCount > 0)
-            {
-                int step = 3;
-                for (int i = 0; i < trailCount; i += step)
-                {
-                    int index = (trailIndex - i - 1 + MaxTrailLength) % MaxTrailLength;
-                    float trailAlpha = 1f - (i / (float)MaxTrailLength);
-                    float trailScale = Scale * trailAlpha;
-
-                    Color trailColor = new Color(drawColor.R, drawColor.G, drawColor.B, (byte)(drawColor.A * trailAlpha));
-                    spriteBatch.Draw(texture, trailPositions[index], sourceRect, trailColor * alpha, Rotation, origin, trailScale, SpriteEffects.None, layerDepth);
-                }
-            }
-
             spriteBatch.Draw(texture, Position, sourceRect, drawColor * alpha, Rotation, origin, Scale, SpriteEffects.None, layerDepth);
         }
 
@@ -286,7 +246,7 @@ namespace Proximity.Content
         {
             for (int i = 0; i < MaxParticles; i++)
             {
-                particlePool[poolCount++] = new Particle(0, Vector2.Zero, Vector2.Zero, 0f, Color.White, Color.White, 1f, 0, 0, 1f, false);
+                particlePool[poolCount++] = new Particle(0, Vector2.Zero, Vector2.Zero, 0f, Color.White, Color.White, 1f, 0, 0, 1f);
             }
         }
 
@@ -341,7 +301,7 @@ namespace Proximity.Content
 
         private int newParticleFrameCounter = 0;
 
-        public Particle NewParticle(int id, Rectangle area, Vector2 velocity, float colorFade, Color startColor, Color endColor, float scale, float lifeTime, int drawLayer, bool hasTrail = false, int ai = 0, object owner = null, bool isDirect = true, float rotation = 0f)
+        public Particle NewParticle(int id, Rectangle area, Vector2 velocity, float colorFade, Color startColor, Color endColor, float scale, float lifeTime, int drawLayer, int ai = 0, object owner = null, bool isDirect = true, float rotation = 0f)
         {
             newParticleFrameCounter++;
             if (!isDirect && newParticleFrameCounter % 2 != 0)
@@ -371,7 +331,6 @@ namespace Proximity.Content
             particle.CurrentLifeTime = 0f;
             particle.ColorFade = colorFade;
             particle.IsActive = true;
-            particle.HasTrail = hasTrail;
             particle.AI = ai;
             particle.Rotation = rotation;
             particle.Owner = owner;
