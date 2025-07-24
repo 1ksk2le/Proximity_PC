@@ -541,6 +541,7 @@ namespace Proximity
             projectileProperties.DrawShadows(spriteBatch, gameTime, player, camera, arena);
             npcProperties.DrawNPCShadows(spriteBatch, gameTime);
             player.DrawShadow(spriteBatch);
+            particleManager.OnArenaDrawParticles(spriteBatch, camera, arena);
             itemProperties.DrawDroppedItems(spriteBatch, (float)gameTime.TotalGameTime.TotalSeconds, player.Hitbox, Font, inventory);
             projectileProperties.PreDrawProjectiles(spriteBatch, gameTime, player, camera, arena);
             npcProperties.PreDrawNPCs(spriteBatch, gameTime, player, camera, arena);

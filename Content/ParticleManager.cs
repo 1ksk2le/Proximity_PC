@@ -9,7 +9,8 @@ namespace Proximity.Content
     public enum DrawLayer
     {
         BelowPlayer = 0,
-        AbovePlayer = 1
+        AbovePlayer = 1,
+        OnArena = 2
     }
 
     public struct Particle
@@ -140,7 +141,7 @@ namespace Proximity.Content
             if (AI == 2)
             {
                 float ejectPhase = TotalLifeTime * 0.015f;
-                float fallPhase = TotalLifeTime * 0.075f;
+                float fallPhase = TotalLifeTime * 0.1f;
 
                 if (CurrentLifeTime <= 0.01f)
                 {
@@ -148,7 +149,7 @@ namespace Proximity.Content
 
                 if (CurrentLifeTime <= ejectPhase)
                 {
-                    Velocity.Y -= 3f;
+                    Velocity.Y -= 5f;
                     if (Owner is Player player && player.CurrentHealth > 0)
                     {
                         Velocity.X -= 2f * (player.IsFacingLeft ? -1f : 1f);
@@ -172,9 +173,6 @@ namespace Proximity.Content
             if (AI == 3)
             {
                 float fallPhase = TotalLifeTime * 0.2f;
-                if (CurrentLifeTime <= 0.01f)
-                {
-                }
 
                 if (CurrentLifeTime <= fallPhase)
                 {
@@ -243,6 +241,11 @@ namespace Proximity.Content
         {
             if (DrawLayer == 1) Draw(spriteBatch, texture);
         }
+
+        public void OnArenaDraw(SpriteBatch spriteBatch, Texture2D texture)
+        {
+            if (DrawLayer == 2) Draw(spriteBatch, texture);
+        }
     }
 
     public class ParticleManager
@@ -255,6 +258,7 @@ namespace Proximity.Content
         private readonly Dictionary<int, Texture2D> particleTextures;
         private readonly ContentManager contentManager;
         private readonly Random random;
+        private readonly Dictionary<Texture2D, List<Particle>> onArenaDrawTextureGroups = new();
         private readonly Dictionary<Texture2D, List<Particle>> preDrawTextureGroups = new();
         private readonly Dictionary<Texture2D, List<Particle>> postDrawTextureGroups = new();
 
@@ -432,6 +436,47 @@ namespace Proximity.Content
                     {
                         i++;
                     }
+                }
+            }
+        }
+
+        public void OnArenaDrawParticles(SpriteBatch spriteBatch, Camera camera, Arena world)
+        {
+            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
+            lastVisibleArea = visibleArea;
+
+            foreach (var list in onArenaDrawTextureGroups.Values)
+                ReturnListToPool(list);
+            onArenaDrawTextureGroups.Clear();
+
+            for (int i = 0; i < activeCount; i++)
+            {
+                var particle = activeParticles[i];
+                if (particle.DrawLayer != 2)
+                    continue;
+
+                if (!IsParticleVisible(particle.Position, visibleArea))
+                    continue;
+
+                Texture2D texture = GetParticleTexture(particle.ID);
+                if (texture == null)
+                    continue;
+
+                if (!onArenaDrawTextureGroups.TryGetValue(texture, out var list))
+                {
+                    list = GetListFromPool();
+                    onArenaDrawTextureGroups[texture] = list;
+                }
+                list.Add(particle);
+            }
+
+            foreach (var kvp in onArenaDrawTextureGroups)
+            {
+                Texture2D texture = kvp.Key;
+                var list = kvp.Value;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    list[i].OnArenaDraw(spriteBatch, texture);
                 }
             }
         }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace Proximity.Content.Projectiles
 {
@@ -30,14 +29,14 @@ namespace Proximity.Content.Projectiles
                 new Rectangle(Hitbox().Center.X, Hitbox().Center.Y, 0, 0),
                 Vector2.Zero,
                 0.4f,
-                Color.RoyalBlue,
-                Color.RoyalBlue * 0.3f,
+                Color.CornflowerBlue,
+                Color.CornflowerBlue * 0.3f,
                 random.NextFloat(0.5f, 1f) * Scale,
-                random.NextFloat(0.5f, 1.2f),
+                random.NextFloat(1f, 2f),
                 (int)DrawLayer.BelowPlayer,
                 false,
                 0,
-                this,
+                player,
                 true,
                 0f
                 );
@@ -55,32 +54,23 @@ namespace Proximity.Content.Projectiles
 
         public override void Kill()
         {
-            const int killParticles = 3;
-            float coneAngle = MathHelper.ToRadians(360f);
-            Vector2 origin = Position;
-            float baseAngle = (float)Math.Atan2(Direction.Y, Direction.X);
-
-            for (int i = 0; i < killParticles; i++)
+            for (int i = 0; i < 1; i++)
             {
-                float angle = baseAngle + random.NextFloat(-coneAngle / 2f, coneAngle / 2f);
-                float speed = random.NextFloat(10f, 35f);
-                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * -speed;
-
                 particle.NewParticle(
-                    4,
-                    new Rectangle((int)origin.X, (int)origin.Y, 0, 0),
-                    velocity,
+                    7,
+                    new Rectangle((int)Hitbox().X, (int)Hitbox().Y, 0, 0),
+                    Vector2.Zero,
                     0.5f,
-                    Color.RoyalBlue,
-                    Color.RoyalBlue * 0.3f,
-                    random.NextFloat(0.3f, 1.2f) * Scale,
-                    random.NextFloat(1.5f, 4.5f),
-                    (int)DrawLayer.BelowPlayer,
+                    Color.LightSkyBlue,
+                    Color.LightSkyBlue * 0.8f,
+                    random.NextFloat(0.3f, 0.8f) * Scale,
+                    random.NextFloat(3f, 5f),
+                    (int)DrawLayer.OnArena,
                     false,
-                    4,
+                    0,
                     null,
                     true,
-                    angle
+                    0f
                 );
             }
             base.Kill();

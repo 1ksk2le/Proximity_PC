@@ -332,12 +332,25 @@ namespace Proximity.Content
                     ? Player.BASE_SCALE + (Player.JUMP_SCALE - Player.BASE_SCALE) * (float)Math.Sin(Math.PI * jumpProgress)
                     : Player.BASE_SCALE;
 
-                Vector2 drawPos = player.Position + offset * jumpScale + new Vector2(0, jumpOffset - walkBobOffset);
+                float rifleMoveX = 0f;
+                float attackProgress = 0f;
+                if (player.IsAttacking)
+                {
+                    float animationDuration = UseTime * 0.95f;
+                    float elapsed = UseTime - player.AttackTimer;
+                    attackProgress = MathHelper.Clamp(elapsed / animationDuration, 0f, 1f);
+
+                    if (Type == "[Weapon - Rifle]")
+                    {
+                        rifleMoveX = -Texture.Width / 5f * attackProgress * (player.IsFacingLeft ? -1f : 1f);
+                    }
+                }
+
+                Vector2 drawPos = player.Position + offset * jumpScale + new Vector2(rifleMoveX, jumpOffset - walkBobOffset);
 
                 float angle;
                 if (player.IsAttacking)
                 {
-                    float attackProgress = 1f - (player.AttackTimer / UseTime);
                     float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);
                     float recoil = Recoil * (float)Math.Sin(attackProgress * MathHelper.Pi);
                     angle = player.IsFacingLeft ? MathHelper.Pi + baseAngle + recoil : baseAngle - recoil;
@@ -637,10 +650,13 @@ namespace Proximity.Content
         {
             if (player.IsAttacking)
             {
-                float attackProgress = 1f - (player.AttackTimer / UseTime);
+                float animationDuration = UseTime * 0.95f;
+                float elapsed = UseTime - player.AttackTimer;
+                float animProgress = MathHelper.Clamp(elapsed / animationDuration, 0f, 1f);
+
                 float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);
 
-                float recoil = Recoil * (float)Math.Sin(attackProgress * MathHelper.Pi);
+                float recoil = Recoil * (float)Math.Sin(animProgress * MathHelper.Pi);
 
                 float attackRotation = player.IsFacingLeft ? MathHelper.Pi + baseAngle + recoil : baseAngle - recoil;
 
@@ -656,7 +672,13 @@ namespace Proximity.Content
                     ? Player.BASE_SCALE + (Player.JUMP_SCALE - Player.BASE_SCALE) * (float)Math.Sin(Math.PI * jumpProgress)
                     : Player.BASE_SCALE;
 
-                Vector2 drawPos = player.Position + offset * jumpScale + new Vector2(0, jumpOffset - walkBobOffset);
+                float rifleMoveX = 0f;
+                if (Type == "[Weapon - Rifle]")
+                {
+                    rifleMoveX = -Texture.Width / 5f * animProgress * (player.IsFacingLeft ? -1f : 1f);
+                }
+
+                Vector2 drawPos = player.Position + offset * jumpScale + new Vector2(rifleMoveX, jumpOffset - walkBobOffset);
 
                 Vector2 origin = new Vector2(player.IsFacingLeft ? Texture.Width : 0, Texture.Height / 2f);
 

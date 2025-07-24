@@ -39,7 +39,7 @@ namespace Proximity.Content.Items
             ) * (player.WeaponHitbox.Width * 0.5f * (player.IsFacingLeft ? -1f : 1f));
             lastMuzzlePosition = muzzlePosition;
 
-            if (smokeTimer > 0f && !player.IsAttacking && random.Next(2) == 0)
+            if (smokeTimer > 0f && !player.IsAttacking && random.Next(10) == 0)
             {
                 smokeTimer -= deltaTime;
                 const int smokeParticles = 1;
@@ -48,10 +48,10 @@ namespace Proximity.Content.Items
                     particle.NewParticle(
                         4,
                         new Rectangle((int)lastMuzzlePosition.X, (int)lastMuzzlePosition.Y, 0, 0),
-                        new Vector2(0, random.NextFloat(100f, 30f)),
+                        new Vector2(0, random.NextFloat(75f, 30f)),
                         0.5f,
-                        Color.RoyalBlue,
-                        Color.RoyalBlue * 0.3f,
+                        Color.CornflowerBlue,
+                        Color.CornflowerBlue * 0.3f,
                         random.NextFloat(0.2f, 0.8f),
                         random.NextFloat(4f, 8f),
                         (int)DrawLayer.BelowPlayer,
@@ -121,8 +121,8 @@ namespace Proximity.Content.Items
                     new Rectangle((int)muzzleOrigin.X, (int)muzzleOrigin.Y, 0, 0),
                     velocity + new Vector2(0, -25),
                     0.4f,
-                    Color.RoyalBlue,
-                    Color.RoyalBlue * 0.3f,
+                    Color.CornflowerBlue,
+                    Color.CornflowerBlue * 0.3f,
                     random.NextFloat(0.2f, 0.8f),
                     random.NextFloat(8f, 10f),
                     (int)DrawLayer.BelowPlayer,

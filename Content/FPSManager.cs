@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Proximity.Content;
@@ -11,6 +13,10 @@ namespace Proximity
         private int frameCount;
         private readonly BitmapFont font;
 
+        // Moving average buffer for FPS smoothing
+        private readonly Queue<int> fpsBuffer = new Queue<int>();
+        private const int BufferSize = 10;
+
         public FPSManager(BitmapFont font)
         {
             this.font = font;
@@ -21,9 +27,18 @@ namespace Proximity
             accumulatedTime += gameTime.ElapsedGameTime.TotalSeconds;
             frameCount++;
 
-            if (accumulatedTime >= 0.3)
+            if (accumulatedTime >= 0.1) // Update FPS more frequently
             {
-                fps = (int)(frameCount / accumulatedTime);
+                int currentFPS = (int)(frameCount / accumulatedTime);
+                fpsBuffer.Enqueue(currentFPS);
+
+                if (fpsBuffer.Count > BufferSize)
+                {
+                    fpsBuffer.Dequeue();
+                }
+
+                fps = (int)(fpsBuffer.Average()); // Calculate moving average
+
                 accumulatedTime = 0;
                 frameCount = 0;
             }

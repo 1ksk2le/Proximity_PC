@@ -306,9 +306,5 @@ namespace Proximity.Content.Items
             );
             spriteBatch.Draw(Main.Bloom, bloomRect, new Color(0, 226, 189) * colorPulse);
         }
-
-        public override void Use(float deltaTime, Player player, Vector2 direction)
-        {
-        }
     }
 }

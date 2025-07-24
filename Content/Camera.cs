@@ -7,7 +7,7 @@ namespace Proximity.Content
     {
         private const float MIN_ZOOM = 1f;
         private const float MAX_ZOOM = 3f;
-        private const float DEFAULT_ZOOM = 1.0f;
+        private const float DEFAULT_ZOOM = 0.75f;
         private const float ZOOM_SCALE = 1.0f;
         private const float PAUSED_ZOOM = 2.5f;
         private const float ZOOM_TRANSITION_SPEED = 3.0f;
@@ -17,6 +17,10 @@ namespace Proximity.Content
         private readonly int worldHeight;
         private float zoom = DEFAULT_ZOOM;
         private float targetZoom = DEFAULT_ZOOM;
+
+        private Vector2 shakeOffset = Vector2.Zero;
+        private float shakeDuration = 0f;
+        private float shakeIntensity = 0f;
 
         public Vector2 Position
         {
@@ -41,7 +45,8 @@ namespace Proximity.Content
             this.worldHeight = worldHeight;
         }
 
-        public void SetInventoryMode(bool enabled, Vector2? focusPosition = null, float? zoom = null) { }
+        public void SetInventoryMode(bool enabled, Vector2? focusPosition = null, float? zoom = null)
+        { }
 
         public void Update(Player player, float deltaTime = 1 / 60f, bool isPaused = false)
         {
@@ -67,6 +72,21 @@ namespace Proximity.Content
                 MathHelper.Clamp(targetPosition.X, 0, Math.Max(0, maxX)),
                 MathHelper.Clamp(targetPosition.Y, 0, Math.Max(0, maxY))
             );
+
+            if (shakeDuration > 0f)
+            {
+                Random random = new Random();
+                shakeOffset = new Vector2(
+                    (float)(random.NextDouble() * 2 - 1) * shakeIntensity,
+                    (float)(random.NextDouble() * 2 - 1) * shakeIntensity
+                );
+                shakeDuration -= (float)deltaTime;
+                if (shakeDuration <= 0f)
+                {
+                    shakeOffset = Vector2.Zero;
+                }
+            }
+            position += shakeOffset;
         }
 
         public Rectangle GetVisibleArea(Vector2 screenSize, Arena world)
@@ -86,6 +106,12 @@ namespace Proximity.Content
         public Vector2 ScreenToWorld(Vector2 screenPosition)
         {
             return Vector2.Transform(screenPosition, Matrix.Invert(TransformMatrix));
+        }
+
+        public void Shake(float intensity, float duration)
+        {
+            shakeIntensity = intensity;
+            shakeDuration = duration;
         }
     }
 }

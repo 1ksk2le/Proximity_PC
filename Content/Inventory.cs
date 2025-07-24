@@ -314,7 +314,7 @@ namespace Proximity.Content
                     // Stats
                     List<string> statDisplay = new List<string>();
                     if (selected.Damage != 0) statDisplay.Add($"{selected.Damage} damage");
-                    if (selected.Knockback != 0) statDisplay.Add($"{(selected.Knockback / 100f):0.00} meters knocback");
+                    if (selected.Knockback != 0) statDisplay.Add($"{(selected.Knockback / 100f):.00} knockback");
                     if (selected.ShootSpeed != 0) statDisplay.Add($"{selected.ShootSpeed} range");
                     if (selected.UseTime != 0) statDisplay.Add($"{(1f / selected.UseTime):0.00} uses per second");
                     if (selected.Defense != 0) statDisplay.Add($"{selected.Defense} defense");
@@ -455,7 +455,7 @@ namespace Proximity.Content
                             string line = statDisplay[i];
                             int iconIndex = -1;
                             if (line.Contains("damage")) iconIndex = 0;
-                            else if (line.Contains("knocback")) iconIndex = 1;
+                            else if (line.Contains("knockback")) iconIndex = 1;
                             else if (line.Contains("range")) iconIndex = 2;
                             else if (line.Contains("uses per second")) iconIndex = 3;
                             else if (line.Contains("defense")) iconIndex = 4;
@@ -464,10 +464,8 @@ namespace Proximity.Content
                             int statIconY = infoY;
                             if (statIconsTexture != null && iconIndex >= 0)
                             {
-                                int statIconOffset = 0;
-                                if (iconIndex == 5) statIconOffset = -5;
                                 Rectangle statIconSrcRect = new Rectangle(0, iconIndex * StatIconSize, StatIconSize, StatIconSize);
-                                Vector2 iconPos = new Vector2(infoBoxPadding + statIconOffset, infoY + 2);
+                                Vector2 iconPos = new Vector2(infoBoxPadding, infoY + 2);
                                 infoBatch.Draw(statIconsTexture, iconPos, statIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
                             }
                             float textOffsetX = statIconsTexture != null && iconIndex >= 0 ? StatIconSize + 8 : 0;
