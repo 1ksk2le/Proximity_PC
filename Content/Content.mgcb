@@ -26,6 +26,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Grayscale.fx
 
+#begin Shaders/ParticleInstance.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/ParticleInstance.fx
+
 #begin Textures/Items/t_Item_0.png
 /importer:TextureImporter
 /processor:TextureProcessor

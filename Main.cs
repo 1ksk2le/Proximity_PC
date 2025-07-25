@@ -277,6 +277,7 @@ namespace Proximity
             arena = new Arena();
             camera = new Camera(Vector2.Zero, arena.TileSize * arena.SizeX, arena.TileSize * arena.SizeY);
             particleManager = new ParticleManager(Content);
+            particleManager.LoadContent(GraphicsDevice, Content);
             floatingTextManager = new FloatingTextManager(Font);
             projectileProperties = new ProjectileProperties(Content, particleManager);
             npcProperties = new NPCProperties(Content, particleManager, floatingTextManager);
@@ -541,16 +542,17 @@ namespace Proximity
             projectileProperties.DrawShadows(spriteBatch, gameTime, player, camera, arena);
             npcProperties.DrawNPCShadows(spriteBatch, gameTime);
             player.DrawShadow(spriteBatch);
-            particleManager.OnArenaDrawParticles(spriteBatch, camera, arena);
+            //particleManager.OnArenaDrawParticles(spriteBatch, camera, arena);
             itemProperties.DrawDroppedItems(spriteBatch, (float)gameTime.TotalGameTime.TotalSeconds, player.Hitbox, Font, inventory);
             projectileProperties.PreDrawProjectiles(spriteBatch, gameTime, player, camera, arena);
             npcProperties.PreDrawNPCs(spriteBatch, gameTime, player, camera, arena);
-            particleManager.PreDrawParticles(spriteBatch, camera, arena);
+            //particleManager.PreDrawParticles(spriteBatch, camera, arena);
             player.DrawBody(spriteBatch, gameTime);
             player.DrawHead(spriteBatch, gameTime);
             projectileProperties.PostDrawProjectiles(spriteBatch, gameTime, player, camera, arena);
             npcProperties.PostDrawNPCs(spriteBatch, gameTime, player, camera, arena);
-            particleManager.PostDrawParticles(spriteBatch, camera, arena);
+            //particleManager.PostDrawParticles(spriteBatch, camera, arena);
+            particleManager.Draw(GraphicsDevice, camera);
             spriteBatch.End();
         }
 
