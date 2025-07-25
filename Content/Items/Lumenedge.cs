@@ -85,7 +85,6 @@ namespace Proximity.Content.Items
                         scale * player.CurrentScale,
                         0.25f + 0.1f * t,
                         (int)DrawLayer.BelowPlayer,
-                        false,
                         1,
                         player,
                         true,

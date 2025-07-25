@@ -122,7 +122,6 @@ namespace Proximity.Content.Projectiles
                     random.NextFloat(0.5f, 0.8f) * Scale,
                     random.NextFloat(1.5f, 25f),
                     (int)DrawLayer.AbovePlayer,
-                    false,
                     1,
                     null,
                     true,
