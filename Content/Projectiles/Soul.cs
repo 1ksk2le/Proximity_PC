@@ -55,11 +55,11 @@ namespace Proximity.Content.Projectiles
                 1,
                 Hitbox(),
                 Vector2.Zero,
-                0.2f,
+                0.12f,
                 new Color(0, 226, 189, 220),
                 new Color(149, 33, 77, 220),
                 0.9f * Scale,
-                1.5f,
+                3f,
                 (int)DrawLayer.AbovePlayer,
                 1,
                 this,
@@ -86,24 +86,31 @@ namespace Proximity.Content.Projectiles
 
         public override void Kill()
         {
-            for (int i = 0; i < 32; i++)
+            const int killParticles = 10;
+            float coneAngle = MathHelper.ToRadians(30f);
+            Vector2 origin = Position;
+            float baseAngle = (float)Math.Atan2(Direction.Y, Direction.X);
+
+            for (int i = 0; i < killParticles; i++)
             {
-                float angle = MathHelper.TwoPi * i / 16f;
-                Vector2 velocity = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 20f;
-                var burst = particle.NewParticle(
+                float angle = baseAngle + random.NextFloat(-coneAngle / 2f, coneAngle / 2f);
+                float speed = random.NextFloat(10f, 75f);
+                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * -speed;
+
+                particle.NewParticle(
                     4,
-                    new Rectangle((int)Position.X - 5, (int)Position.Y - 5, 10, 10),
+                    new Rectangle((int)origin.X, (int)origin.Y, 0, 0),
                     velocity,
-                    0.75f,
+                    0.4f,
                     new Color(149, 33, 77, 220),
                     new Color(0, 226, 189, 220),
-                    0.6f * Scale,
-                    2f,
+                    1.8f * Scale,
+                    5f,
                     (int)DrawLayer.AbovePlayer,
-                    0,
+                    1,
                     null,
                     true,
-                    0f
+                    angle
                 );
             }
             base.Kill();

@@ -40,7 +40,7 @@ namespace Proximity
 
         public void Draw(SpriteBatch spriteBatch, Texture2D texture)
         {
-            if (spriteBatch == null || texture == null || ID != 3)
+            if (spriteBatch == null || texture == null || ID == -1)
                 return;
 
             spriteBatch.Draw(texture, Rectangle, Color.White);

@@ -57,17 +57,17 @@ namespace Proximity.Content.Items
                 (int)(spawnArea.Height * 0.75f)
             );
 
-            if (random.Next(100) < 10)
+            if (random.Next(100) < 25)
             {
                 var a = particle.NewParticle(
                     4,
                     spawnArea,
-                    velocityDir * 200f,
-                    0.1f,
+                    velocityDir * 50f,
+                    0.5f,
                     new Color(181, 99, 33, 200),
-                    new Color(181, 99, 33, 200),
-                    random.NextFloat(0.2f, 0.8f) * player.CurrentScale,
-                    2f,
+                    new Color(98, 158, 146, 200),
+                    random.NextFloat(0.8f, 1.2f) * player.CurrentScale,
+                    5f,
                     (int)DrawLayer.BelowPlayer,
                     1,
                     player,
@@ -82,12 +82,12 @@ namespace Proximity.Content.Items
                     var p = particle.NewParticle(
                     4,
                     spawnArea,
-                    velocityDir * 200f,
-                    0.1f,
+                    velocityDir * 50f,
+                    0.5f,
                     new Color(98, 158, 146, 200),
-                    new Color(98, 158, 146, 200),
-                    random.NextFloat(0.2f, 0.8f) * player.CurrentScale,
-                    2f,
+                    new Color(181, 99, 33, 200),
+                    random.NextFloat(0.8f, 1.2f) * player.CurrentScale,
+                    5f,
                     (int)DrawLayer.BelowPlayer,
                     1,
                     player,

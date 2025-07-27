@@ -170,42 +170,6 @@ namespace Proximity.Content
             float lerpAmount = MathHelper.Clamp(CurrentLifeTime / (TotalLifeTime * ColorFade), 0f, 1f);
             return Color.Lerp(StartColor, EndColor, lerpAmount);
         }
-
-        public void Draw(SpriteBatch spriteBatch, Texture2D texture)
-        {
-            if (!IsActive || texture == null) return;
-
-            Color drawColor = AI == 2 ? Color.White : GetCurrentColor();
-            float invLifeTime = TotalLifeTime > 0f ? 1f / TotalLifeTime : 1f;
-            float alpha = 1f - (CurrentLifeTime * invLifeTime);
-            alpha = MathHelper.Clamp(alpha, 0f, 1f);
-            float layerDepth = DrawLayer == 0 ? 0.6f : 0.4f;
-            Vector2 origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
-            Rectangle? sourceRect = null;
-            if (ID == 7)
-            {
-                int frameHeight = texture.Height / 4;
-                sourceRect = new Rectangle(0, Frame * frameHeight, texture.Width, frameHeight);
-                origin = new Vector2(texture.Width / 2f, frameHeight / 2f);
-            }
-
-            spriteBatch.Draw(texture, Position, sourceRect, drawColor * alpha, Rotation, origin, Scale, SpriteEffects.None, layerDepth);
-        }
-
-        public void PreDraw(SpriteBatch spriteBatch, Texture2D texture)
-        {
-            if (DrawLayer == 0) Draw(spriteBatch, texture);
-        }
-
-        public void PostDraw(SpriteBatch spriteBatch, Texture2D texture)
-        {
-            if (DrawLayer == 1) Draw(spriteBatch, texture);
-        }
-
-        public void OnArenaDraw(SpriteBatch spriteBatch, Texture2D texture)
-        {
-            if (DrawLayer == 2) Draw(spriteBatch, texture);
-        }
     }
 
     public class ParticleManager
@@ -214,7 +178,6 @@ namespace Proximity.Content
         private Dictionary<int, Texture2D> _idToTexture;
         private Effect _particleEffect;
         private DynamicVertexBuffer _vertexBuffer;
-        private VertexDeclaration _vertexDeclaration;
 
         private struct ParticleVertex : IVertexType
         {
@@ -240,7 +203,6 @@ namespace Proximity.Content
         private ParticleVertex[] particles;
         private short[] quadIndices;
         private int particleCount;
-
         private const int MaxParticles = 2000;
         private readonly Particle[] activeParticles = new Particle[MaxParticles];
         private int activeCount = 0;
@@ -285,7 +247,6 @@ namespace Proximity.Content
         {
             _particleTextures = new List<Texture2D>();
             _idToTexture = new Dictionary<int, Texture2D>();
-            // Load all textures from Content/Textures/Particles
             int textureIndex = 0;
             while (true)
             {
@@ -298,12 +259,11 @@ namespace Proximity.Content
                 }
                 catch
                 {
-                    break; // Stop when no more textures are found
+                    break;
                 }
             }
 
             _particleEffect = content.Load<Effect>("Shaders/ParticleInstance");
-            // Quad vertex/index buffer
             particles = new ParticleVertex[particleCount * 4];
             quadIndices = new short[particleCount * 6];
             for (int i = 0; i < particleCount; i++)
@@ -355,19 +315,6 @@ namespace Proximity.Content
                 particlePool[poolCount++] = particle;
         }
 
-        private List<Particle> GetListFromPool()
-        {
-            if (listPool.Count > 0)
-                return listPool.Dequeue();
-            return new List<Particle>(32);
-        }
-
-        private void ReturnListToPool(List<Particle> list)
-        {
-            list.Clear();
-            listPool.Enqueue(list);
-        }
-
         private int newParticleFrameCounter = 0;
 
         public Particle NewParticle(int id, Rectangle area, Vector2 velocity, float colorFade, Color startColor, Color endColor, float scale, float lifeTime, int drawLayer, int ai = 0, object owner = null, bool isDirect = true, float rotation = 0f)
@@ -394,7 +341,7 @@ namespace Proximity.Content
             particle.Velocity = velocity;
             particle.StartColor = startColor;
             particle.EndColor = endColor;
-            particle.Scale = scale * id == 7 ? 40f : 15f;
+            particle.Scale = scale;
             particle.TotalLifeTime = lifeTime;
             particle.DrawLayer = drawLayer;
             particle.CurrentLifeTime = 0f;
@@ -468,15 +415,16 @@ namespace Proximity.Content
             }
         }
 
-        public void Draw(GraphicsDevice graphicsDevice, Camera camera)
+        public void Draw(GraphicsDevice graphicsDevice, Camera camera, int drawLayer)
         {
-            graphicsDevice.Clear(Color.Black);
+            graphicsDevice.Clear(Color.Transparent);
             graphicsDevice.BlendState = BlendState.AlphaBlend;
 
-            // Group particles by texture ID from activeParticles
             var textureBatches = new Dictionary<int, List<int>>();
             for (int i = 0; i < activeCount; i++)
             {
+                if (activeParticles[i].DrawLayer != drawLayer) continue;
+
                 int texId = activeParticles[i].ID;
                 if (!textureBatches.TryGetValue(texId, out var list))
                 {
@@ -505,32 +453,34 @@ namespace Proximity.Content
                     alpha = MathHelper.Clamp(alpha, 0f, 1f);
                     Color particleColor = p.GetCurrentColor() * alpha;
 
+                    float scaleModifier = texId == 6 ? 40f : 15f;
+
                     int vbase = j * 4;
                     particles[vbase + 0].Position = new Vector3(p.Position, 0);
                     particles[vbase + 0].TexCoord = new Vector2(0, 0);
                     particles[vbase + 0].Color = particleColor;
-                    particles[vbase + 0].Scale = p.Scale;
+                    particles[vbase + 0].Scale = p.Scale * scaleModifier;
                     particles[vbase + 0].Rotation = p.Rotation;
                     particles[vbase + 0].Corner = new Vector2(-0.5f, -0.5f);
 
                     particles[vbase + 1].Position = new Vector3(p.Position, 0);
                     particles[vbase + 1].TexCoord = new Vector2(1, 0);
                     particles[vbase + 1].Color = particleColor;
-                    particles[vbase + 1].Scale = p.Scale;
+                    particles[vbase + 1].Scale = p.Scale * scaleModifier;
                     particles[vbase + 1].Rotation = p.Rotation;
                     particles[vbase + 1].Corner = new Vector2(0.5f, -0.5f);
 
                     particles[vbase + 2].Position = new Vector3(p.Position, 0);
                     particles[vbase + 2].TexCoord = new Vector2(0, 1);
                     particles[vbase + 2].Color = particleColor;
-                    particles[vbase + 2].Scale = p.Scale;
+                    particles[vbase + 2].Scale = p.Scale * scaleModifier;
                     particles[vbase + 2].Rotation = p.Rotation;
                     particles[vbase + 2].Corner = new Vector2(-0.5f, 0.5f);
 
                     particles[vbase + 3].Position = new Vector3(p.Position, 0);
                     particles[vbase + 3].TexCoord = new Vector2(1, 1);
                     particles[vbase + 3].Color = particleColor;
-                    particles[vbase + 3].Scale = p.Scale;
+                    particles[vbase + 3].Scale = p.Scale * scaleModifier;
                     particles[vbase + 3].Rotation = p.Rotation;
                     particles[vbase + 3].Corner = new Vector2(0.5f, 0.5f);
 
@@ -549,7 +499,7 @@ namespace Proximity.Content
                 _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, ParticleVertex.VertexDecl, vertexCount, BufferUsage.WriteOnly);
                 _vertexBuffer.SetData(particles, 0, vertexCount, SetDataOptions.Discard);
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
-                Matrix cameraMatrix = camera.TransformMatrix; // Assuming camera is passed to the Draw method
+                Matrix cameraMatrix = camera.TransformMatrix;
                 Matrix projectionMatrix = Matrix.CreateOrthographicOffCenter(0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height, 0, 0, 1);
                 _particleEffect.Parameters["WorldViewProjection"].SetValue(cameraMatrix * projectionMatrix);
                 _particleEffect.Parameters["ParticleColor"].SetValue(Color.White.ToVector4());
@@ -567,105 +517,6 @@ namespace Proximity.Content
                         quadIndices, 0, indexCount / 3
                     );
                 }
-            }
-        }
-
-        public void OnArenaDrawParticles(SpriteBatch spriteBatch, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            lastVisibleArea = visibleArea;
-
-            foreach (var list in onArenaDrawTextureGroups.Values)
-                ReturnListToPool(list);
-            onArenaDrawTextureGroups.Clear();
-
-            for (int i = 0; i < activeCount; i++)
-            {
-                var particle = activeParticles[i];
-                if (particle.DrawLayer != 2)
-                    continue;
-
-                if (!IsParticleVisible(particle.Position, visibleArea))
-                    continue;
-
-                Texture2D texture = GetParticleTexture(particle.ID);
-                if (texture == null)
-                    continue;
-
-                if (!onArenaDrawTextureGroups.TryGetValue(texture, out var list))
-                {
-                    list = GetListFromPool();
-                    onArenaDrawTextureGroups[texture] = list;
-                }
-                list.Add(particle);
-            }
-
-            foreach (var kvp in onArenaDrawTextureGroups)
-            {
-                Texture2D texture = kvp.Key;
-                var list = kvp.Value;
-                for (int i = 0; i < list.Count; i++)
-                {
-                    list[i].OnArenaDraw(spriteBatch, texture);
-                }
-            }
-        }
-
-        public void PreDrawParticles(SpriteBatch spriteBatch, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            lastVisibleArea = visibleArea;
-
-            foreach (var list in preDrawTextureGroups.Values)
-                ReturnListToPool(list);
-            preDrawTextureGroups.Clear();
-
-            for (int i = 0; i < activeCount; i++)
-            {
-                var particle = activeParticles[i];
-                if (particle.DrawLayer != 0)
-                    continue;
-
-                if (!IsParticleVisible(particle.Position, visibleArea))
-                    continue;
-
-                Texture2D texture = GetParticleTexture(particle.ID);
-                if (texture == null)
-                    continue;
-
-                if (!preDrawTextureGroups.TryGetValue(texture, out var list))
-                {
-                    list = GetListFromPool();
-                    preDrawTextureGroups[texture] = list;
-                }
-                list.Add(particle);
-            }
-
-            foreach (var kvp in preDrawTextureGroups)
-            {
-                Texture2D texture = kvp.Key;
-                var list = kvp.Value;
-                for (int i = 0; i < list.Count; i++)
-                {
-                    list[i].PreDraw(spriteBatch, texture);
-                }
-            }
-        }
-
-        public void PostDrawParticles(SpriteBatch spriteBatch, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            foreach (var list in postDrawTextureGroups.Values)
-                ReturnListToPool(list);
-            postDrawTextureGroups.Clear();
-            for (int i = 0; i < activeCount; i++)
-            {
-                var particle = activeParticles[i];
-                if (particle.DrawLayer != 1) continue;
-                if (!visibleArea.Contains(particle.Position.ToPoint())) continue;
-                Texture2D texture = GetParticleTexture(particle.ID);
-                if (texture == null) continue;
-                particle.PostDraw(spriteBatch, texture);
             }
         }
 

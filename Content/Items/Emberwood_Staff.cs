@@ -55,7 +55,7 @@ namespace Proximity.Content.Items
                             new Color(255, 100, 20, 0),
                             0.8f * player.CurrentScale,
                             2f,
-                            (int)DrawLayer.AbovePlayer
+                            (int)DrawLayer.BelowPlayer
                     );
                 }
             }
@@ -73,7 +73,7 @@ namespace Proximity.Content.Items
                     new Color(255, 100, 20, 0),
                     random.NextFloat(.4f, .8f) * player.CurrentScale,
                     2f,
-                    (int)DrawLayer.AbovePlayer
+                    (int)DrawLayer.BelowPlayer
                     );
                     p.NoGravity = false;
                 }

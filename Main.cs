@@ -52,7 +52,10 @@ namespace Proximity
         private Texture2D joystickJump;
         private Texture2D bloom;
 
-        private RenderTarget2D renderTarget;
+        private RenderTarget2D grayscaleRenderTarget;
+        private RenderTarget2D onArenaRenderTarget;
+        private RenderTarget2D preDrawRenderTarget;
+        private RenderTarget2D postDrawRenderTarget;
         private Effect grayscaleEffect;
 
         public static BitmapFont Font { get; private set; }
@@ -221,30 +224,25 @@ namespace Proximity
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.SetRenderTarget(renderTarget);
-            GraphicsDevice.Clear(Color.Black);
+            // Render the game world to the grayscale render target
+            GraphicsDevice.SetRenderTarget(grayscaleRenderTarget);
+            GraphicsDevice.Clear(Color.Transparent);
             DrawGameWorld(gameTime);
-            DrawUI();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, camera.TransformMatrix);
             floatingTextManager.Draw(spriteBatch, Font);
             spriteBatch.End();
+            DrawUI();
             GraphicsDevice.SetRenderTarget(null);
 
-            spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                null,
-                null,
-                isPaused ? grayscaleEffect : null
-            );
-            spriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
-
+            // Draw the grayscale render target with the grayscale effect
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, isPaused ? grayscaleEffect : null);
+            spriteBatch.Draw(grayscaleRenderTarget, Vector2.Zero, Color.White);
             if (inventory != null && inventory.IsOpen)
             {
                 inventory.Draw(spriteBatch);
             }
             spriteBatch.End();
+
 
             if (isPaused)
             {
@@ -264,8 +262,6 @@ namespace Proximity
                 );
                 spriteBatch.End();
             }
-
-            base.Draw(gameTime);
         }
 
         private void InitializeGameObjects()
@@ -312,7 +308,10 @@ namespace Proximity
             LoadTextures();
             CreatePixelTexture();
             fpsManager = new FPSManager(Font);
-            renderTarget = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            grayscaleRenderTarget = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            onArenaRenderTarget = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            preDrawRenderTarget = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            postDrawRenderTarget = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             grayscaleEffect = Content.Load<Effect>("Shaders/Grayscale");
         }
 
@@ -528,31 +527,48 @@ namespace Proximity
 
         private void DrawGameWorld(GameTime gameTime)
         {
-            spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                null,
-                null,
-                null,
-                camera.TransformMatrix
-            );
-
+            // Set the main render target
+            GraphicsDevice.SetRenderTarget(onArenaRenderTarget);
+            GraphicsDevice.Clear(Color.Transparent);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, camera.TransformMatrix);
             arena.Draw(spriteBatch, camera, tileTextures);
             projectileProperties.DrawShadows(spriteBatch, gameTime, player, camera, arena);
             npcProperties.DrawNPCShadows(spriteBatch, gameTime);
             player.DrawShadow(spriteBatch);
-            //particleManager.OnArenaDrawParticles(spriteBatch, camera, arena);
             itemProperties.DrawDroppedItems(spriteBatch, (float)gameTime.TotalGameTime.TotalSeconds, player.Hitbox, Font, inventory);
             projectileProperties.PreDrawProjectiles(spriteBatch, gameTime, player, camera, arena);
             npcProperties.PreDrawNPCs(spriteBatch, gameTime, player, camera, arena);
-            //particleManager.PreDrawParticles(spriteBatch, camera, arena);
+            particleManager.Draw(GraphicsDevice, camera, 2);
+            spriteBatch.End();
+            GraphicsDevice.SetRenderTarget(null);
+
+            // Draw pre-draw particles
+            GraphicsDevice.SetRenderTarget(preDrawRenderTarget);
+            GraphicsDevice.Clear(Color.Transparent);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, camera.TransformMatrix);
+            particleManager.Draw(GraphicsDevice, camera, 0);
             player.DrawBody(spriteBatch, gameTime);
             player.DrawHead(spriteBatch, gameTime);
+            spriteBatch.End();
+            GraphicsDevice.SetRenderTarget(null);
+
+            // Draw post-draw particles
+            GraphicsDevice.SetRenderTarget(postDrawRenderTarget);
+            GraphicsDevice.Clear(Color.Transparent);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, camera.TransformMatrix);
             projectileProperties.PostDrawProjectiles(spriteBatch, gameTime, player, camera, arena);
             npcProperties.PostDrawNPCs(spriteBatch, gameTime, player, camera, arena);
-            //particleManager.PostDrawParticles(spriteBatch, camera, arena);
-            particleManager.Draw(GraphicsDevice, camera);
+            particleManager.Draw(GraphicsDevice, camera, 1);
+            spriteBatch.End();
+            GraphicsDevice.SetRenderTarget(null);
+
+            GraphicsDevice.SetRenderTarget(grayscaleRenderTarget);
+            GraphicsDevice.Clear(Color.Transparent);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, isPaused ? grayscaleEffect : null);
+            spriteBatch.Draw(onArenaRenderTarget, Vector2.Zero, Color.White);
+            spriteBatch.Draw(preDrawRenderTarget, Vector2.Zero, Color.White);
+            spriteBatch.Draw(postDrawRenderTarget, Vector2.Zero, Color.White);
+            spriteBatch.Draw(grayscaleRenderTarget, Vector2.Zero, Color.White);
             spriteBatch.End();
         }
 
@@ -590,6 +606,7 @@ namespace Proximity
                 center - textSize2 / 2,
                 Color.White
             );
+
             spriteBatch.End();
         }
 
@@ -1008,10 +1025,10 @@ namespace Proximity
                 spriteBatch = null;
             }
 
-            if (renderTarget != null)
+            if (grayscaleRenderTarget != null)
             {
-                renderTarget.Dispose();
-                renderTarget = null;
+                grayscaleRenderTarget.Dispose();
+                grayscaleRenderTarget = null;
             }
             if (grayscaleEffect != null)
             {
