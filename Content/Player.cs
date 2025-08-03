@@ -157,66 +157,6 @@ namespace Proximity.Content
             Center = Position + new Vector2(T_Body.Width / 2, T_Body.Height / 2);
         }
 
-        public void DrawBelowBody(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var item in Equipment.Values)
-            {
-                if (item != null && item.DrawSlot == DrawSlot.BelowBody)
-                {
-                    item.PreDraw(spriteBatch, gameTime, this);
-                    item.PostDraw(spriteBatch, gameTime, this);
-                }
-            }
-        }
-
-        private void DrawAboveBody(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var item in Equipment.Values)
-            {
-                if (item != null && item.DrawSlot == DrawSlot.AboveBody)
-                {
-                    item.PreDraw(spriteBatch, gameTime, this);
-                    item.PostDraw(spriteBatch, gameTime, this);
-                }
-            }
-        }
-
-        private void DrawBelowHead(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var item in Equipment.Values)
-            {
-                if (item != null && item.DrawSlot == DrawSlot.BelowHead)
-                {
-                    item.PreDraw(spriteBatch, gameTime, this);
-                    item.PostDraw(spriteBatch, gameTime, this);
-                }
-            }
-        }
-
-        private void DrawAboveHead(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var item in Equipment.Values)
-            {
-                if (item != null && item.DrawSlot == DrawSlot.AboveHead)
-                {
-                    item.PreDraw(spriteBatch, gameTime, this);
-                    item.PostDraw(spriteBatch, gameTime, this);
-                }
-            }
-        }
-
-        private void DrawOffhand(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var item in Equipment.Values)
-            {
-                if (item != null && item.DrawSlot == DrawSlot.Offhand)
-                {
-                    item.PreDraw(spriteBatch, gameTime, this);
-                    item.PostDraw(spriteBatch, gameTime, this);
-                }
-            }
-        }
-
         public void EquipItem(int itemId, int prefixId = 0, int suffixId = 0)
         {
             if (!ItemDatabase.TryGetValue(itemId, out Item item))
@@ -547,7 +487,15 @@ namespace Proximity.Content
             return GetSkinColor(SkinColor);
         }
 
-        public void DrawShadow(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
+        {
+            DrawHitbox(spriteBatch);
+            DrawShadow(spriteBatch, 0.3f);
+            DrawBaseBody(spriteBatch, gameTime, 0.31f);
+            DrawEquipments(spriteBatch, gameTime, 0.31f);
+        }
+
+        public void DrawShadow(SpriteBatch spriteBatch, float drawLayer)
         {
             float jumpProgress = IsJumping ? 1f - (jumpTime / JUMP_TIME_VALUE) : 0f;
             float jumpShrink = (float)Math.Sin(Math.PI * jumpProgress) * 0.4f;
@@ -578,45 +526,68 @@ namespace Proximity.Content
             if (IsKnocked)
                 opacity *= SHADOW_OPACITY;
 
-            spriteBatch.Draw(T_Shadow, shadowRect, Color.White * opacity);
+            spriteBatch.Draw(T_Shadow, shadowRect, null, Color.White * opacity, 0f, Vector2.Zero, SpriteEffects.None, drawLayer);
         }
 
-        public void DrawBody(SpriteBatch spriteBatch, GameTime gameTime)
+        public void DrawBaseBody(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
-            DrawBelowBody(spriteBatch, gameTime);
             float jumpOffset = IsJumping ? -JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (jumpTime / JUMP_TIME_VALUE))) : 0f;
             float walkBobOffset = IsMoving ? Math.Abs((float)Math.Sin(walkTimer * MathHelper.TwoPi)) * WALK_BOUNCE_HEIGHT : 0f;
             Vector2 drawPosition = Position + new Vector2(0, jumpOffset - walkBobOffset);
             Vector2 bodyOrigin = new Vector2(T_Body.Width / 2, T_Body.Height / 2);
 
             spriteBatch.Draw(T_Body, drawPosition + CalculateKnockbackOffset(), null, GetColor(), KnockbackRotation, bodyOrigin, CurrentScale,
-                IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
-            DrawAboveBody(spriteBatch, gameTime);
-        }
+                IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
 
-        public void DrawHead(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            DrawBelowHead(spriteBatch, gameTime);
-            float jumpOffset = IsJumping ? -JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (jumpTime / JUMP_TIME_VALUE))) : 0f;
-            float walkBobOffset = IsMoving ? Math.Abs((float)Math.Sin(walkTimer * MathHelper.TwoPi)) * WALK_BOUNCE_HEIGHT : 0f;
             float headWobble = IsMoving ? (float)Math.Sin(walkTimer * MathHelper.TwoPi) * WALK_HEAD_BOUNCE_HEIGHT : 0f;
             Vector2 headOffset = new Vector2(headWobble, HEAD_VERTICAL_OFFSET);
-            Vector2 drawPosition = Position + new Vector2(0, jumpOffset - walkBobOffset);
             Vector2 headEyeOrigin = new Vector2(T_Head.Width / 2, T_Head.Height);
             float finalRotation = CalculateHeadRotation() + KnockbackRotation;
 
             spriteBatch.Draw(T_Head, drawPosition + CalculateKnockbackOffset() + headOffset, null, GetColor(), finalRotation, headEyeOrigin, CurrentScale,
-                IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer + 0.002f);
 
             float eyeBounceOffset = IsMoving ? Math.Abs((float)Math.Sin(walkTimer * MathHelper.TwoPi)) * -10f : 0f;
             Vector2 eyeOffset = new Vector2((float)Math.Sin(CalculateHeadRotation()), HEAD_VERTICAL_OFFSET + eyeBounceOffset);
             eyeOffset = Vector2.Transform(eyeOffset + headOffset, Matrix.CreateRotationZ(CalculateHeadRotation()));
             spriteBatch.Draw(T_Eye, drawPosition + CalculateKnockbackOffset() + eyeOffset, IsEyeOpen ? EyeRect_Open : EyeRect_Closed,
                 Color.White, finalRotation, new Vector2(T_Eye.Width / 2, T_Eye.Height / 2),
-                CurrentScale, IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
-            DrawAboveHead(spriteBatch, gameTime);
-            DrawOffhand(spriteBatch, gameTime);
-            DrawHitbox(spriteBatch);
+                CurrentScale, IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer + 0.003f);
+        }
+
+        public void DrawEquipments(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
+        {
+            foreach (var item in Equipment.Values)
+            {
+                if (item != null)//0.311 head
+                {
+                    if (item.DrawSlot == DrawSlot.BelowBody)
+                    {
+                        item.PreDraw(spriteBatch, gameTime, this, drawLayer - 0.009f);
+                        item.PostDraw(spriteBatch, gameTime, this, drawLayer - 0.009f);
+                    }
+                    if (item.DrawSlot == DrawSlot.AboveBody)
+                    {
+                        item.PreDraw(spriteBatch, gameTime, this, drawLayer + 0.001f);
+                        item.PostDraw(spriteBatch, gameTime, this, drawLayer + 0.001f);
+                    }
+                    if (item.DrawSlot == DrawSlot.BelowHead)
+                    {
+                        item.PreDraw(spriteBatch, gameTime, this, drawLayer - 0.008f);
+                        item.PostDraw(spriteBatch, gameTime, this, drawLayer - 0.008f);
+                    }
+                    if (item.DrawSlot == DrawSlot.AboveHead)
+                    {
+                        item.PreDraw(spriteBatch, gameTime, this, drawLayer + 0.004f);
+                        item.PostDraw(spriteBatch, gameTime, this, drawLayer + 0.004f);
+                    }
+                    if (item.DrawSlot == DrawSlot.Offhand)
+                    {
+                        item.PreDraw(spriteBatch, gameTime, this, drawLayer + 0.005f);
+                        item.PostDraw(spriteBatch, gameTime, this, drawLayer + 0.005f);
+                    }
+                }
+            }
         }
 
         private void DrawHitbox(SpriteBatch spriteBatch)
@@ -625,19 +596,19 @@ namespace Proximity.Content
             {
                 if (PlayerSpriteHitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(PlayerSpriteHitbox, Color.Green * 0.2f, Color.Green * 0.8f);
+                    spriteBatch.DrawRectangleBorder(PlayerSpriteHitbox, Color.Green * 0.2f, Color.Green * 0.8f, 1f);
                 }
                 if (Hitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(Hitbox, Color.Lime * 0.2f, Color.Lime * 0.8f);
+                    spriteBatch.DrawRectangleBorder(Hitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f);
                 }
                 if (WeaponHitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(WeaponHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 0f, 4f, WeaponHitboxRotation);
+                    spriteBatch.DrawRectangleBorder(WeaponHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f, 4f, WeaponHitboxRotation);
                 }
                 if (OffhandHitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(OffhandHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f);
+                    spriteBatch.DrawRectangleBorder(OffhandHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f);
                 }
                 if (IsAttacking && EquipmentItems.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon.Type.Contains("Sword"))
                 {
@@ -660,10 +631,10 @@ namespace Proximity.Content
                     }
                     for (int i = 1; i < arcPoints.Length - 1; i++)
                     {
-                        spriteBatch.DrawLine(arcPoints[i], arcPoints[i + 1], Color.Lime, 0f, 3f);
+                        spriteBatch.DrawLine(arcPoints[i], arcPoints[i + 1], Color.Lime, 1f, 3f);
                     }
-                    spriteBatch.DrawLine(playerCenter, arcPoints[1], Color.Lime, 0f, 2f);
-                    spriteBatch.DrawLine(playerCenter, arcPoints[arcPoints.Length - 1], Color.Lime, 0f, 2f);
+                    spriteBatch.DrawLine(playerCenter, arcPoints[1], Color.Lime, 1f, 2f);
+                    spriteBatch.DrawLine(playerCenter, arcPoints[arcPoints.Length - 1], Color.Lime, 1f, 2f);
                 }
             }
         }

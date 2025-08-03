@@ -68,20 +68,19 @@ namespace Proximity.Content.Projectiles
             );
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             return;
         }
 
-        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             float pulseTime = Main.Paused ? 0f : (float)gameTime.TotalGameTime.TotalSeconds * 2f;
             float pulse = (float)(0.5 + 0.5 * Math.Sin(pulseTime));
             Color colorA = new Color(0, 226, 189, 110);
             Color colorB = Color.DarkTurquoise;
             Color bloomColor = Color.Lerp(colorA, colorB, pulse);
-            spriteBatch.Draw(Main.Bloom, Position - new Vector2(Main.Bloom.Width / 2f * Scale, Main.Bloom.Height / 2f * Scale), null, bloomColor, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0f);
-            base.PostDraw(spriteBatch, gameTime, player);
+            spriteBatch.Draw(Main.Bloom, Position - new Vector2(Main.Bloom.Width / 2f * Scale, Main.Bloom.Height / 2f * Scale), null, bloomColor, 0f, Vector2.Zero, Scale, SpriteEffects.None, drawLayer);
         }
 
         public override void Kill()

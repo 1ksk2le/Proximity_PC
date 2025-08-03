@@ -114,7 +114,7 @@ namespace Proximity.Content
                         origin,
                         new Vector2(shadowScale, shadowScale * 0.45f),
                         SpriteEffects.None,
-                        0f
+                        0.14f
                     );
 
                     // Draw the item
@@ -127,7 +127,7 @@ namespace Proximity.Content
                         origin,
                         perspectiveScale,
                         SpriteEffects.None,
-                        0f
+                        0.15f
                     );
 
                     // If player hitbox intersects, draw item name above

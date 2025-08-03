@@ -134,15 +134,7 @@ namespace Proximity.Content
             }
         }
 
-        public void DrawNPCShadows(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            foreach (var npc in activeNPCs)
-            {
-                npc.DrawShadows(spriteBatch, gameTime);
-            }
-        }
-
-        public void PreDrawNPCs(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
+        public void DrawNPCs(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
         {
             Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
             var textureGroups = new Dictionary<Texture2D, List<NPC>>();
@@ -163,36 +155,17 @@ namespace Proximity.Content
                 {
                     if (npc.TexturePosition.Y <= player.PlayerSpriteHitbox.Center.Y)
                     {
-                        npc.PreDraw(spriteBatch, gameTime);
-                        npc.PostDraw(spriteBatch, gameTime);
+                        npc.DrawShadow(spriteBatch, gameTime, 0.20f);
+                        npc.PreDraw(spriteBatch, gameTime, 0.21f);
+                        npc.Draw(spriteBatch, gameTime, 0.22f);
+                        npc.PostDraw(spriteBatch, gameTime, 0.23f);
                     }
-                }
-            }
-        }
-
-        public void PostDrawNPCs(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            var textureGroups = new Dictionary<Texture2D, List<NPC>>();
-            foreach (var npc in activeNPCs)
-            {
-                if (!npc.IsActive || npc.Texture == null) continue;
-                if (!visibleArea.Contains(npc.Position.ToPoint())) continue;
-                if (!textureGroups.TryGetValue(npc.Texture, out var list))
-                {
-                    list = new List<NPC>();
-                    textureGroups[npc.Texture] = list;
-                }
-                list.Add(npc);
-            }
-            foreach (var kvp in textureGroups)
-            {
-                foreach (var npc in kvp.Value)
-                {
-                    if (npc.TexturePosition.Y > player.PlayerSpriteHitbox.Center.Y || player.IsJumping)
+                    else
                     {
-                        npc.PreDraw(spriteBatch, gameTime);
-                        npc.PostDraw(spriteBatch, gameTime);
+                        npc.DrawShadow(spriteBatch, gameTime, 0.40f);
+                        npc.PreDraw(spriteBatch, gameTime, 0.41f);
+                        npc.Draw(spriteBatch, gameTime, 0.42f);
+                        npc.PostDraw(spriteBatch, gameTime, 0.43f);
                     }
                 }
             }

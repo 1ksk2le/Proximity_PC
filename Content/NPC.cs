@@ -200,18 +200,23 @@ namespace Proximity.Content
             Hurt(damage, knockbackDir, projectile.Knockback, KnockbackResistance);
         }
 
-        public virtual void DrawShadows(SpriteBatch spriteBatch, GameTime gameTime)
+        public virtual void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
         }
 
-        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime)
+        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             if (!IsActive || Texture == null) return;
             {
             }
         }
 
-        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime)
+        public virtual void Draw(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
+        {
+            if (!IsActive || Texture == null) return;
+        }
+
+        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             if (!IsActive || Texture == null) return;
             {
@@ -219,15 +224,15 @@ namespace Proximity.Content
 
                 if (Main.DebugMode)
                 {
-                    spriteBatch.DrawRectangleBorder(TextureHitbox(), Color.DarkRed * 0.2f, Color.DarkRed * 0.8f);
-                    spriteBatch.DrawRectangleBorder(Hitbox(), Color.Red * 0.2f, Color.Red * 0.8f);
+                    spriteBatch.DrawRectangleBorder(TextureHitbox(), Color.DarkRed * 0.2f, Color.DarkRed * 0.8f, 1f);
+                    spriteBatch.DrawRectangleBorder(Hitbox(), Color.Red * 0.2f, Color.Red * 0.8f, 1f);
                     float width = Texture.Width;
                     float height = Texture.Height / TotalFrames;
                     Vector2 origin = new Vector2(0, height / 2);
                     Vector2 center;
                     center = Position + origin;
-                    spriteBatch.DrawCircle(center, DetectRange, Color.Red);
-                    spriteBatch.DrawCircle(Hitbox().Center.ToVector2(), 16f, Color.Black);
+                    spriteBatch.DrawCircle(center, DetectRange, Color.Red, 32, 1f);
+                    spriteBatch.DrawCircle(Hitbox().Center.ToVector2(), 16f, Color.Black, 32, 1f);
                 }
                 /*if (Prefix == "Fiery")
                 {
@@ -356,33 +361,33 @@ namespace Proximity.Content
                 Color drawColor = Color.White * healthBarAlpha;
 
                 Rectangle srcRedFill = new Rectangle(3 * BORDER_FRAME_WIDTH + FILL_FRAME_WIDTH, 0, FILL_FRAME_WIDTH, FRAME_HEIGHT);
-                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, fillTotalWidth, FRAME_HEIGHT), srcRedFill, drawColor);
+                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, fillTotalWidth, FRAME_HEIGHT), srcRedFill, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.91f);
 
                 int whiteWidth = (int)(fillTotalWidth * displayedHealthPercent);
                 if (whiteWidth > 0)
                 {
                     Rectangle srcWhiteFill = new Rectangle(3 * BORDER_FRAME_WIDTH + 2 * FILL_FRAME_WIDTH, 0, FILL_FRAME_WIDTH, FRAME_HEIGHT);
-                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, whiteWidth, FRAME_HEIGHT), srcWhiteFill, drawColor);
+                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, whiteWidth, FRAME_HEIGHT), srcWhiteFill, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.92f);
                 }
 
                 int fillWidth = (int)(fillTotalWidth * healthPercent);
                 if (fillWidth > 0)
                 {
                     Rectangle srcFill = new Rectangle(3 * BORDER_FRAME_WIDTH, 0, FILL_FRAME_WIDTH, FRAME_HEIGHT);
-                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, fillWidth, FRAME_HEIGHT), srcFill, drawColor);
+                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + 2, barY, fillWidth, FRAME_HEIGHT), srcFill, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.93f);
                 }
 
                 Rectangle srcLeft = new Rectangle(LEFT_FRAME * BORDER_FRAME_WIDTH, 0, BORDER_FRAME_WIDTH, FRAME_HEIGHT);
-                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX, barY, leftWidth, FRAME_HEIGHT), srcLeft, drawColor);
+                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX, barY, leftWidth, FRAME_HEIGHT), srcLeft, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.94f);
 
                 if (midWidth > 0)
                 {
                     Rectangle srcMid = new Rectangle(MID_FRAME * BORDER_FRAME_WIDTH, 0, BORDER_FRAME_WIDTH, FRAME_HEIGHT);
-                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + leftWidth, barY, midWidth, FRAME_HEIGHT), srcMid, drawColor);
+                    spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + leftWidth, barY, midWidth, FRAME_HEIGHT), srcMid, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.95f);
                 }
 
                 Rectangle srcRight = new Rectangle(RIGHT_FRAME * BORDER_FRAME_WIDTH, 0, BORDER_FRAME_WIDTH, FRAME_HEIGHT);
-                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + leftWidth + midWidth, barY, rightWidth, FRAME_HEIGHT), srcRight, drawColor);
+                spriteBatch.Draw(HealthbarTexture, new Rectangle(barX + leftWidth + midWidth, barY, rightWidth, FRAME_HEIGHT), srcRight, drawColor, 0f, Vector2.Zero, SpriteEffects.None, 0.96f);
             }
         }
 

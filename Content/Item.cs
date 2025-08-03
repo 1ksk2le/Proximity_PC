@@ -96,11 +96,11 @@ namespace Proximity.Content
             return $"{Prefix} {Name} {Suffix}".Trim();
         }
 
-        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
         }
 
-        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
         }
 
@@ -408,7 +408,7 @@ namespace Proximity.Content
             );
         }
 
-        protected void DrawSwordAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player, float windUpRatio = 0.3f)
+        protected void DrawSwordAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer, float windUpRatio = 0.3f)
         {
             if (player.IsAttacking)
             {
@@ -448,13 +448,13 @@ namespace Proximity.Content
                 }
 
                 spriteBatch.Draw(Texture, itemPosition, null, Color.White, finalAngle, origin, Player.BASE_SCALE * scaleEffect,
-                player.IsFacingLeft ? SpriteEffects.FlipVertically : SpriteEffects.None, 0f);
+                player.IsFacingLeft ? SpriteEffects.FlipVertically : SpriteEffects.None, drawLayer);
             }
         }
 
         protected float currentSwordAngle = MathHelper.ToRadians(15);
 
-        protected void DrawSwordIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawSwordIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (!player.IsAttacking && !player.IsKnocked)
             {
@@ -486,11 +486,11 @@ namespace Proximity.Content
                 float finalAngle = currentSwordAngle + idleWave + walkTilt;
 
                 spriteBatch.Draw(Texture, itemPosition, null, Color.White, finalAngle, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
             }
         }
 
-        protected void DrawChestplate(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawChestplate(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
             float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.walkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
@@ -499,10 +499,10 @@ namespace Proximity.Content
             Vector2 bodyOrigin = new Vector2(player.T_Body.Width / 2f, player.T_Body.Height / 2f - player.T_Head.Height);
 
             spriteBatch.Draw(Texture, drawPosition + player.CalculateKnockbackOffset() + new Vector2((player.IsFacingLeft ? 1 : 6), 0), null, Color.White, player.KnockbackRotation, bodyOrigin, player.CurrentScale,
-                player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
         }
 
-        protected void DrawHelmet(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawHelmet(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
             float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.walkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
@@ -514,10 +514,10 @@ namespace Proximity.Content
             Vector2 headEyeOrigin = new Vector2(Texture.Width / 2, Texture.Height);
 
             spriteBatch.Draw(Texture, drawPosition + player.CalculateKnockbackOffset() + headOffset, null, Color.White, finalRotation, headEyeOrigin, player.CurrentScale,
-                player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
         }
 
-        protected void DrawOffhandIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawOffhandIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             var pos = player.Position;
             float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
@@ -533,11 +533,11 @@ namespace Proximity.Content
                 Vector2 origin = new Vector2(Texture.Width / 2f, Texture.Height / 2f);
 
                 spriteBatch.Draw(Texture, itemPosition, null, Color.White, 0f, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
             }
         }
 
-        protected void DrawStaffIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawStaffIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (!player.IsKnocked && !player.IsAttacking)
             {
@@ -570,11 +570,11 @@ namespace Proximity.Content
                 Vector2 origin = new Vector2(Texture.Width / 2f, Texture.Height);
 
                 spriteBatch.Draw(Texture, basePosition, null, Color.White, finalRotation, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0f);
+                    player.IsFacingLeft ? SpriteEffects.None : SpriteEffects.FlipHorizontally, drawLayer);
             }
         }
 
-        protected void DrawStaffAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawStaffAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (player.IsAttacking)
             {
@@ -605,13 +605,13 @@ namespace Proximity.Content
                 Vector2 origin = new Vector2(Texture.Width / 2f, Texture.Height);
 
                 spriteBatch.Draw(Texture, basePosition, null, Color.White, finalRotation, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0f);
+                    player.IsFacingLeft ? SpriteEffects.None : SpriteEffects.FlipHorizontally, drawLayer);
             }
         }
 
         protected float currentGunAngle = MathHelper.ToRadians(30);
 
-        protected void DrawGunIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawGunIdle(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (!player.IsAttacking && !player.IsKnocked)
             {
@@ -642,11 +642,11 @@ namespace Proximity.Content
                 Vector2 origin = new Vector2(player.IsFacingLeft ? Texture.Width : 0, Texture.Height / 2f);
 
                 spriteBatch.Draw(Texture, drawPos, null, Color.White, idleRotation, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
             }
         }
 
-        protected void DrawGunAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        protected void DrawGunAttack(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (player.IsAttacking)
             {
@@ -683,7 +683,7 @@ namespace Proximity.Content
                 Vector2 origin = new Vector2(player.IsFacingLeft ? Texture.Width : 0, Texture.Height / 2f);
 
                 spriteBatch.Draw(Texture, drawPos, null, Color.White, attackRotation, origin, jumpScale,
-                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+                    player.IsFacingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None, drawLayer);
             }
         }
     }

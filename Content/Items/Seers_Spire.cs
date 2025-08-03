@@ -227,44 +227,16 @@ namespace Proximity.Content.Items
             }
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PreDraw(spriteBatch, gameTime, player);
-            DrawStaffAttack(spriteBatch, gameTime, player);
-            DrawStaffIdle(spriteBatch, gameTime, player);
-
-            float pulseTime = (float)gameTime.TotalGameTime.TotalSeconds * 2f;
-            float pulse = (float)(0.5 + 0.5 * Math.Sin(pulseTime));
-            Color colorA = new Color(0, 226, 189, 110);
-            Color colorB = Color.DarkTurquoise;
-            Color bloomColor = Color.Lerp(colorA, colorB, pulse);
-            foreach (var soul in orbitingSouls)
-            {
-                float phase = MathHelper.PiOver4 * soul.PhaseSign;
-                float armAngle = soul.Angle;
-                switch (soul.XArm)
-                {
-                    case 0: armAngle = soul.Angle; break;
-                    case 1: armAngle = MathHelper.Pi - soul.Angle; break;
-                    case 2: armAngle = MathHelper.Pi + soul.Angle; break;
-                    case 3: armAngle = -soul.Angle; break;
-                }
-                float x = (float)Math.Cos(armAngle) * (soul.OrbitRadius + 30f);
-                float y = (float)Math.Sin(armAngle + phase) * (soul.OrbitRadius + 30f) * 0.8f;
-                Vector2 soulPos = player.Position + new Vector2(x, y);
-                float depth = (y + (soul.OrbitRadius + 30f) * 0.8f) / ((soul.OrbitRadius + 30f) * 1.6f);
-                float scale = MathHelper.Lerp(0.35f, 0.9f, depth);
-                int drawLayer = depth > 0.5f ? (int)DrawLayer.AbovePlayer : (int)DrawLayer.BelowPlayer;
-                if (drawLayer == (int)DrawLayer.BelowPlayer)
-                {
-                    spriteBatch.Draw(Main.Bloom, new Rectangle((int)(soulPos.X - 24 * scale), (int)(soulPos.Y - 24 * scale), (int)(48 * scale), (int)(48 * scale)), bloomColor);
-                }
-            }
+            base.PreDraw(spriteBatch, gameTime, player, drawLayer);
+            DrawStaffAttack(spriteBatch, gameTime, player, drawLayer);
+            DrawStaffIdle(spriteBatch, gameTime, player, drawLayer);
         }
 
-        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PostDraw(spriteBatch, gameTime, player);
+            base.PostDraw(spriteBatch, gameTime, player, drawLayer);
             float pulseTime = (float)gameTime.TotalGameTime.TotalSeconds * 2f;
             float pulse = (float)(0.5 + 0.5 * Math.Sin(pulseTime));
             Color colorA = new Color(0, 226, 189, 110);
@@ -286,11 +258,9 @@ namespace Proximity.Content.Items
                 Vector2 soulPos = player.Position + new Vector2(x, y);
                 float depth = (y + (soul.OrbitRadius + 30f) * 0.8f) / ((soul.OrbitRadius + 30f) * 1.6f);
                 float scale = MathHelper.Lerp(0.35f, 0.9f, depth);
-                int drawLayer = depth > 0.5f ? (int)DrawLayer.AbovePlayer : (int)DrawLayer.BelowPlayer;
-                if (drawLayer == (int)DrawLayer.AbovePlayer)
-                {
-                    spriteBatch.Draw(Main.Bloom, new Rectangle((int)(soulPos.X - 24 * scale), (int)(soulPos.Y - 24 * scale), (int)(48 * scale), (int)(48 * scale)), bloomColor);
-                }
+                int dL = depth > 0.5f ? (int)DrawLayer.AbovePlayer : (int)DrawLayer.BelowPlayer;
+                spriteBatch.Draw(Main.Bloom, new Vector2((int)(soulPos.X - 24 * scale), (int)(soulPos.Y - 24 * scale)), null, bloomColor, 0f, Vector2.Zero, scale,
+                SpriteEffects.None, dL == (int)DrawLayer.AbovePlayer ? drawLayer + 0.02f : drawLayer - 0.01f);
             }
 
             float colorPulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
@@ -301,7 +271,7 @@ namespace Proximity.Content.Items
                 (int)(100 * scalePulse * player.CurrentScale),
                 (int)(100 * scalePulse * player.CurrentScale)
             );
-            spriteBatch.Draw(Main.Bloom, bloomRect, new Color(0, 226, 189) * colorPulse);
+            spriteBatch.Draw(Main.Bloom, bloomRect, null, new Color(0, 226, 189) * colorPulse, 0f, Vector2.Zero, SpriteEffects.None, drawLayer);
         }
     }
 }

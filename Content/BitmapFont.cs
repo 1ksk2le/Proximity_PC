@@ -63,7 +63,7 @@ namespace Proximity.Content
             {
                 if (characterMap.TryGetValue(c, out Rectangle sourceRect))
                 {
-                    spriteBatch.Draw(fontTexture, currentPosition, sourceRect, color, 0f, effectiveOrigin, scale, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(fontTexture, currentPosition, sourceRect, color, 0f, effectiveOrigin, scale, SpriteEffects.None, 1f);
                     int advance = characterAdvanceMap.TryGetValue(c, out int adv) ? adv : characterWidth;
                     currentPosition.X += advance * scale;
                 }

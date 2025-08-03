@@ -60,7 +60,7 @@ namespace Proximity.Content
             }
         }
 
-        public virtual void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime)
+        public virtual void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             float shadowWidth = Texture.Width * 2;
             float shadowHeight = Texture.Width;
@@ -72,21 +72,26 @@ namespace Proximity.Content
                 (int)shadowHeight
             );
 
-            spriteBatch.Draw(Main.Shadow, shadowRect, Color.White * Player.SHADOW_OPACITY);
+            spriteBatch.Draw(Main.Shadow, shadowRect, null, Color.White * Player.SHADOW_OPACITY, 0f, Vector2.Zero, SpriteEffects.None, drawLayer);
         }
 
-        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public virtual void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (!IsActive || Texture == null) return;
         }
 
-        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public virtual void Draw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
+        {
+            if (!IsActive || Texture == null) return;
+        }
+
+        public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (!IsActive || Texture == null) return;
             if (Main.DebugMode)
             {
-                spriteBatch.DrawCircle(Hitbox().Center.ToVector2(), 4f, Color.Black);
-                spriteBatch.DrawRectangleBorder(Hitbox(), Color.CadetBlue * 0.2f, Color.CadetBlue * 0.8f);
+                spriteBatch.DrawCircle(Hitbox().Center.ToVector2(), 4f, Color.Black, 32, 1f);
+                spriteBatch.DrawRectangleBorder(Hitbox(), Color.CadetBlue * 0.2f, Color.CadetBlue * 0.8f, 1f);
             }
         }
 

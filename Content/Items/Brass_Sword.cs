@@ -24,16 +24,16 @@ namespace Proximity.Content.Items
             Knockback = 200f;
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PreDraw(spriteBatch, gameTime, player);
-            DrawSwordAttack(spriteBatch, gameTime, player);
-            DrawSwordIdle(spriteBatch, gameTime, player);
+            base.PreDraw(spriteBatch, gameTime, player, drawLayer);
+            DrawSwordAttack(spriteBatch, gameTime, player, drawLayer);
+            DrawSwordIdle(spriteBatch, gameTime, player, drawLayer);
         }
 
-        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PostDraw(spriteBatch, gameTime, player);
+            base.PostDraw(spriteBatch, gameTime, player, drawLayer);
         }
     }
 }

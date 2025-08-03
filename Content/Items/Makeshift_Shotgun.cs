@@ -64,16 +64,16 @@ namespace Proximity.Content.Items
             }
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PreDraw(spriteBatch, gameTime, player);
-            DrawGunAttack(spriteBatch, gameTime, player);
-            DrawGunIdle(spriteBatch, gameTime, player);
+            base.PreDraw(spriteBatch, gameTime, player, drawLayer);
+            DrawGunAttack(spriteBatch, gameTime, player, drawLayer);
+            DrawGunIdle(spriteBatch, gameTime, player, drawLayer);
         }
 
-        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PostDraw(spriteBatch, gameTime, player);
+            base.PostDraw(spriteBatch, gameTime, player, drawLayer);
         }
 
         public override void Use(float deltaTime, Player player, Vector2 direction)

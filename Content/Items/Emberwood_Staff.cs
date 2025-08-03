@@ -80,16 +80,16 @@ namespace Proximity.Content.Items
             }
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PreDraw(spriteBatch, gameTime, player);
-            DrawStaffAttack(spriteBatch, gameTime, player);
-            DrawStaffIdle(spriteBatch, gameTime, player);
+            base.PreDraw(spriteBatch, gameTime, player, drawLayer);
+            DrawStaffAttack(spriteBatch, gameTime, player, drawLayer);
+            DrawStaffIdle(spriteBatch, gameTime, player, drawLayer);
         }
 
-        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-            base.PostDraw(spriteBatch, gameTime, player);
+            base.PostDraw(spriteBatch, gameTime, player, drawLayer);
             float pulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
             float scalePulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.8f;
 
@@ -99,7 +99,7 @@ namespace Proximity.Content.Items
                 (int)(100 * scalePulse * player.CurrentScale),
                 (int)(100 * scalePulse * player.CurrentScale)
             );
-            spriteBatch.Draw(Main.Bloom, bloomRect, new Color(200, 100, 0, 0) * pulse);
+            spriteBatch.Draw(Main.Bloom, bloomRect, null, new Color(200, 100, 0, 0) * pulse, 0f, Vector2.Zero, SpriteEffects.None, drawLayer);
         }
 
         public override void Use(float deltaTime, Player player, Vector2 direction)

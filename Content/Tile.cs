@@ -43,7 +43,8 @@ namespace Proximity
             if (spriteBatch == null || texture == null || ID == -1)
                 return;
 
-            spriteBatch.Draw(texture, Rectangle, Color.White);
+            //spriteBatch.Draw(texture, Rectangle, Color.White);
+            spriteBatch.Draw(texture, new Vector2(Rectangle.X, Rectangle.Y), null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
         }
 
         public Tile Clone(Rectangle rectangle)

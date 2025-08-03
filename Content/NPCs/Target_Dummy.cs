@@ -35,15 +35,10 @@ namespace Proximity.Content.NPCs
             TexturePosition = Position;
         }
 
-        public override void DrawShadows(SpriteBatch spriteBatch, GameTime gameTime)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
-            base.DrawShadows(spriteBatch, gameTime);
-        }
-
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            base.PreDraw(spriteBatch, gameTime);
-            spriteBatch.Draw(Texture, Position - new Vector2(Texture.Width / 2, Texture.Height / 2), null, GetColor());
+            base.PreDraw(spriteBatch, gameTime, drawLayer);
+            spriteBatch.Draw(Texture, Position - new Vector2(Texture.Width / 2, Texture.Height / 2), null, GetColor(), 0f, Vector2.Zero, Scale, SpriteEffects.None, drawLayer);
         }
 
         public override void Kill()

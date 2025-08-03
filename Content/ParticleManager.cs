@@ -415,15 +415,19 @@ namespace Proximity.Content
             }
         }
 
-        public void Draw(GraphicsDevice graphicsDevice, Camera camera, int drawLayer)
+        public void Draw(GraphicsDevice graphicsDevice, Camera camera, float drawLayer)
         {
-            graphicsDevice.Clear(Color.Transparent);
             graphicsDevice.BlendState = BlendState.AlphaBlend;
+            graphicsDevice.DepthStencilState = new DepthStencilState
+            {
+                DepthBufferEnable = true,
+                DepthBufferWriteEnable = true
+            };
 
             var textureBatches = new Dictionary<int, List<int>>();
             for (int i = 0; i < activeCount; i++)
             {
-                if (activeParticles[i].DrawLayer != drawLayer) continue;
+                if (Math.Abs(activeParticles[i].DrawLayer - drawLayer) > 0.0001f) continue;
 
                 int texId = activeParticles[i].ID;
                 if (!textureBatches.TryGetValue(texId, out var list))
@@ -456,28 +460,47 @@ namespace Proximity.Content
                     float scaleModifier = texId == 6 ? 40f : 15f;
 
                     int vbase = j * 4;
-                    particles[vbase + 0].Position = new Vector3(p.Position, 0);
+                    float zLayer;
+                    switch (p.DrawLayer)
+                    {
+                        case (int)DrawLayer.BelowPlayer:
+                            zLayer = 0.29f;
+                            break;
+
+                        case (int)DrawLayer.AbovePlayer:
+                            zLayer = 0.49f;
+                            break;
+
+                        case (int)DrawLayer.OnArena:
+                            zLayer = 0.13f;
+                            break;
+
+                        default:
+                            zLayer = 0.50f;
+                            break;
+                    }
+                    particles[vbase + 0].Position = new Vector3(p.Position, zLayer);
                     particles[vbase + 0].TexCoord = new Vector2(0, 0);
                     particles[vbase + 0].Color = particleColor;
                     particles[vbase + 0].Scale = p.Scale * scaleModifier;
                     particles[vbase + 0].Rotation = p.Rotation;
                     particles[vbase + 0].Corner = new Vector2(-0.5f, -0.5f);
 
-                    particles[vbase + 1].Position = new Vector3(p.Position, 0);
+                    particles[vbase + 1].Position = new Vector3(p.Position, zLayer);
                     particles[vbase + 1].TexCoord = new Vector2(1, 0);
                     particles[vbase + 1].Color = particleColor;
                     particles[vbase + 1].Scale = p.Scale * scaleModifier;
                     particles[vbase + 1].Rotation = p.Rotation;
                     particles[vbase + 1].Corner = new Vector2(0.5f, -0.5f);
 
-                    particles[vbase + 2].Position = new Vector3(p.Position, 0);
+                    particles[vbase + 2].Position = new Vector3(p.Position, zLayer);
                     particles[vbase + 2].TexCoord = new Vector2(0, 1);
                     particles[vbase + 2].Color = particleColor;
                     particles[vbase + 2].Scale = p.Scale * scaleModifier;
                     particles[vbase + 2].Rotation = p.Rotation;
                     particles[vbase + 2].Corner = new Vector2(-0.5f, 0.5f);
 
-                    particles[vbase + 3].Position = new Vector3(p.Position, 0);
+                    particles[vbase + 3].Position = new Vector3(p.Position, zLayer);
                     particles[vbase + 3].TexCoord = new Vector2(1, 1);
                     particles[vbase + 3].Color = particleColor;
                     particles[vbase + 3].Scale = p.Scale * scaleModifier;
@@ -500,7 +523,7 @@ namespace Proximity.Content
                 _vertexBuffer.SetData(particles, 0, vertexCount, SetDataOptions.Discard);
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
                 Matrix cameraMatrix = camera.TransformMatrix;
-                Matrix projectionMatrix = Matrix.CreateOrthographicOffCenter(0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height, 0, 0, 1);
+                Matrix projectionMatrix = Matrix.CreateOrthographicOffCenter(0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height, 0, -1, 1);
                 _particleEffect.Parameters["WorldViewProjection"].SetValue(cameraMatrix * projectionMatrix);
                 _particleEffect.Parameters["ParticleColor"].SetValue(Color.White.ToVector4());
                 if (_idToTexture.TryGetValue(texId, out var tex))

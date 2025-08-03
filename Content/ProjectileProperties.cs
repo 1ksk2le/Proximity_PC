@@ -125,7 +125,7 @@ namespace Proximity.Content
             }
         }
 
-        public void DrawShadows(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
+        public void DrawProjectiles(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
         {
             Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
             var textureGroups = new Dictionary<Texture2D, List<Projectile>>();
@@ -144,55 +144,10 @@ namespace Proximity.Content
             {
                 foreach (var projectile in kvp.Value)
                 {
-                    projectile.DrawShadow(spriteBatch, gameTime);
-                }
-            }
-        }
-
-        public void PreDrawProjectiles(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            var textureGroups = new Dictionary<Texture2D, List<Projectile>>();
-            foreach (var projectile in activeProjectiles)
-            {
-                if (!projectile.IsActive || projectile.Texture == null) continue;
-                if (!visibleArea.Contains(projectile.Position.ToPoint())) continue;
-                if (!textureGroups.TryGetValue(projectile.Texture, out var list))
-                {
-                    list = new List<Projectile>();
-                    textureGroups[projectile.Texture] = list;
-                }
-                list.Add(projectile);
-            }
-            foreach (var kvp in textureGroups)
-            {
-                foreach (var projectile in kvp.Value)
-                {
-                    projectile.PreDraw(spriteBatch, gameTime, player);
-                }
-            }
-        }
-
-        public void PostDrawProjectiles(SpriteBatch spriteBatch, GameTime gameTime, Player player, Camera camera, Arena world)
-        {
-            Rectangle visibleArea = camera.GetVisibleArea(Main.Dimensions, world);
-            var textureGroups = new Dictionary<Texture2D, List<Projectile>>();
-            foreach (var projectile in activeProjectiles)
-            {
-                if (!projectile.IsActive || projectile.Texture == null) continue;
-                if (!visibleArea.Contains(projectile.Position.ToPoint())) continue;
-                if (!textureGroups.TryGetValue(projectile.Texture, out var list))
-                {
-                    list = new List<Projectile>();
-                    textureGroups[projectile.Texture] = list;
-                }
-                list.Add(projectile);
-            }
-            foreach (var kvp in textureGroups)
-            {
-                foreach (var projectile in kvp.Value)
-                {
-                    projectile.PostDraw(spriteBatch, gameTime, player);
+                    projectile.DrawShadow(spriteBatch, gameTime, 0.40f);
+                    projectile.PreDraw(spriteBatch, gameTime, player, 0.41f);
+                    projectile.Draw(spriteBatch, gameTime, player, 0.42f);
+                    projectile.PostDraw(spriteBatch, gameTime, player, 0.43f);
                 }
             }
         }

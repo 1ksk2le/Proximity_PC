@@ -104,12 +104,7 @@ namespace Proximity.Content.Projectiles
             );
         }
 
-        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            return;
-        }
-
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             return;
         }

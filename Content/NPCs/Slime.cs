@@ -152,10 +152,9 @@ namespace Proximity.Content.NPCs
             }
         }
 
-        public override void DrawShadows(SpriteBatch spriteBatch, GameTime gameTime)
+        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
-            base.DrawShadows(spriteBatch, gameTime);
-
+            base.DrawShadow(spriteBatch, gameTime, drawLayer);
             int frameHeight = Texture.Height / TotalFrames;
             float jumpProgress = 0f;
             float walkBobOffset = 0f;
@@ -176,12 +175,12 @@ namespace Proximity.Content.NPCs
             int shadowWidth = (int)(Texture.Width * Scale * 1.2f * shadowScale);
             int shadowHeight = (int)(Texture.Width * Scale * 0.6f * shadowScale);
             Vector2 shadowPos = new Vector2(Position.X - shadowWidth / 2f, Position.Y + frameHeight / 2f - shadowHeight / 2f);
-            spriteBatch.Draw(Main.Shadow, new Rectangle((int)shadowPos.X, (int)shadowPos.Y, shadowWidth, shadowHeight), null, Color.Black * shadowAlpha, 0f, Vector2.Zero, SpriteEffects.None, 0.01f);
+            spriteBatch.Draw(Main.Shadow, new Rectangle((int)shadowPos.X, (int)shadowPos.Y, shadowWidth, shadowHeight), null, Color.Black * shadowAlpha, 0f, Vector2.Zero, SpriteEffects.None, drawLayer);
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
-            base.PreDraw(spriteBatch, gameTime);
+            base.Draw(spriteBatch, gameTime, drawLayer);
             int frameHeight = Texture.Height / TotalFrames;
             Rectangle sourceRect = new Rectangle(0, animationFrame * frameHeight, Texture.Width, frameHeight);
             Vector2 origin = new Vector2(Texture.Width / 2f, frameHeight / 2f);
@@ -203,7 +202,7 @@ namespace Proximity.Content.NPCs
                 scale = 1f + 0.15f * jumpProgress;
             }
 
-            spriteBatch.Draw(Texture, TexturePosition, sourceRect, GetColor(), 0f, origin, scale * Scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture, TexturePosition, sourceRect, GetColor(), 0f, origin, scale * Scale, SpriteEffects.None, drawLayer);
         }
 
         protected override void Hurt(int damage, Vector2 knockbackDirection, float knockback = 0f, float knockbackResistance = 0f)

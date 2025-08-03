@@ -61,6 +61,8 @@ technique ParticleTechnique
 {
     pass Pass0
     {
+        ZEnable = true;
+        ZWriteEnable = true;
         VertexShader = compile vs_2_0 VS();
         PixelShader  = compile ps_2_0 PS();
     }

@@ -61,7 +61,7 @@ namespace Proximity.Content.Projectiles
                 positionHistory.RemoveAt(0);
         }
 
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             if (Texture != null && positionHistory.Count > 0)
             {
@@ -89,12 +89,12 @@ namespace Proximity.Content.Projectiles
                         new Vector2(Texture.Width / 2f, Texture.Height / 2f),
                         scale,
                         SpriteEffects.None,
-                        0f);
+                        drawLayer);
                 }
             }
         }
 
-        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime)
+        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
         {
             return;
         }

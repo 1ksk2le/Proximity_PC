@@ -20,6 +20,11 @@ namespace Proximity.Content.Projectiles
             Penetrate = 1;
         }
 
+        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime, float drawLayer)
+        {
+            return;
+        }
+
         public override void Update(float deltaTime, Player player)
         {
             base.Update(deltaTime, player);
@@ -39,16 +44,6 @@ namespace Proximity.Content.Projectiles
                 true,
                 0f
                 );
-        }
-
-        public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
-        {
-            base.PreDraw(spriteBatch, gameTime, player);
-        }
-
-        public override void DrawShadow(SpriteBatch spriteBatch, GameTime gameTime)
-        {
-            return;
         }
 
         public override void Kill()
