@@ -237,7 +237,7 @@ namespace Proximity.Content.Items
         public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             base.PostDraw(spriteBatch, gameTime, player, drawLayer);
-            float pulseTime = (float)gameTime.TotalGameTime.TotalSeconds * 2f;
+            float pulseTime = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds * 2f;
             float pulse = (float)(0.5 + 0.5 * Math.Sin(pulseTime));
             Color colorA = new Color(0, 226, 189, 110);
             Color colorB = Color.DarkTurquoise;
@@ -263,8 +263,8 @@ namespace Proximity.Content.Items
                 SpriteEffects.None, dL == (int)DrawLayer.AbovePlayer ? drawLayer + 0.02f : drawLayer - 0.01f);
             }
 
-            float colorPulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
-            float scalePulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f + 1.2f;
+            float colorPulse = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0.4f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
+            float scalePulse = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 1.2f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f + 1.2f;
             Rectangle bloomRect = new Rectangle(
                 (int)((player.WeaponHitbox.X + (player.WeaponHitbox.Width / 2) - (int)(50 * scalePulse))),
                 (int)((player.WeaponHitbox.Y - (int)(30 * scalePulse))),

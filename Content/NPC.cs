@@ -141,7 +141,7 @@ namespace Proximity.Content
 
             int playerId = player.GetHashCode();
             int currentAttackId = player.MeleeAttackID;
-            if (player.IsAttacking && !player.IsJumping && !IsImmune && player.EquipmentItems.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon.Type.Contains("Sword"))
+            if (player.IsAttacking && !player.IsJumping && !IsImmune && player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon.Type.Contains("Sword"))
             {
                 float attackProgress = 1f - (player.AttackTimer / weapon.UseTime);
                 if (attackProgress >= 0.35f)

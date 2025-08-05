@@ -61,6 +61,7 @@ namespace Proximity
         public static Texture2D Shadow { get; private set; }
         public static Vector2 Dimensions { get; private set; }
         public static bool DebugMode { get; private set; }
+        public static bool InventoryOpen { get; private set; }
         public static bool Paused { get; private set; }
 
         private bool pauseTouchState = false;
@@ -131,10 +132,12 @@ namespace Proximity
 
         protected override void Update(GameTime gameTime)
         {
-            Paused = (inventory.IsOpen || isPaused) ? true : false;
+            Paused = (inventory.IsOpen || isPaused || InventoryOpen) ? true : false;
 
             var touches = TouchPanel.GetState();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            InventoryOpen = inventory.IsOpen;
 
             // Update InputManager states
             InputManager.Instance.PreUpdate();
@@ -196,7 +199,7 @@ namespace Proximity
 
             if (inventory.IsOpen)
             {
-                inventory.Update(touches);
+                inventory.Update(touches, player);
                 base.Update(gameTime);
                 return;
             }
@@ -236,7 +239,7 @@ namespace Proximity
             spriteBatch.Draw(grayscaleRenderTarget, Vector2.Zero, Color.White);
             if (inventory != null && inventory.IsOpen)
             {
-                inventory.Draw(spriteBatch);
+                inventory.Draw(spriteBatch, gameTime, player);
             }
             spriteBatch.End();
 
@@ -777,7 +780,7 @@ namespace Proximity
             }
             position.Y += lineHeight * 2;
 
-            foreach (var equipment in player.EquipmentItems)
+            foreach (var equipment in player.EquippedItems)
             {
                 if (equipment.Value != null)
                 {
@@ -879,7 +882,7 @@ namespace Proximity
             int startY = debugButtonRectangle.Bottom + 10;
             debugItemButtons.Clear();
 
-            foreach (var slot in player.EquipmentItems.Keys)
+            foreach (var slot in player.EquippedItems.Keys)
             {
                 var buttonRect = new Rectangle(
                     debugButtonRectangle.X,
@@ -893,7 +896,7 @@ namespace Proximity
                 spriteBatch.Draw(pixel, buttonRect, buttonColor);
                 spriteBatch.DrawRectangleBorder(buttonRect, Color.White, Color.Black, 0f, 2);
 
-                var item = player.EquipmentItems[slot];
+                var item = player.EquippedItems[slot];
                 string itemName = item != null ? item.GetName() : "Empty";
                 var textPosition = new Vector2(buttonRect.X + 5, buttonRect.Y + 5);
                 Font.DrawString(
@@ -939,7 +942,7 @@ namespace Proximity
         // Overload for direction: true = next, false = previous
         private void CycleItemInSlot(EquipmentSlot slot, bool next)
         {
-            var currentItem = player.EquipmentItems[slot];
+            var currentItem = player.EquippedItems[slot];
             int currentId = currentItem?.ID ?? 0;
             int newId = next ? FindNextItemId(currentId, slot) : FindPreviousItemId(currentId, slot);
             if (newId != currentId)

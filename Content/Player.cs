@@ -86,10 +86,10 @@ namespace Proximity.Content
         public Rectangle OffhandHitbox { get; set; }
         public Rectangle PlayerSpriteHitbox { get; private set; }
         public float WeaponHitboxRotation { get; set; }
-        public Vector2 Position { get; private set; }
+        public Vector2 Position { get; set; }
         public float SkinColor { get; private set; }
         public bool IsJumping { get; private set; }
-        public IReadOnlyDictionary<EquipmentSlot, Item> EquipmentItems => Equipment;
+        public IReadOnlyDictionary<EquipmentSlot, Item> EquippedItems => Equipment;
         public float AttackTimer => attackTimer;
         public Vector2 AttackDirection => attackDirection;
         public float JumpTime => jumpTime;
@@ -596,11 +596,11 @@ namespace Proximity.Content
             {
                 if (PlayerSpriteHitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(PlayerSpriteHitbox, Color.Green * 0.2f, Color.Green * 0.8f, 1f);
+                    spriteBatch.DrawRectangleBorder(PlayerSpriteHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f);
                 }
                 if (Hitbox != Rectangle.Empty)
                 {
-                    spriteBatch.DrawRectangleBorder(Hitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f);
+                    spriteBatch.DrawRectangleBorder(Hitbox, Color.Green * 0.2f, Color.Green * 0.8f, 1f);
                 }
                 if (WeaponHitbox != Rectangle.Empty)
                 {
@@ -610,7 +610,7 @@ namespace Proximity.Content
                 {
                     spriteBatch.DrawRectangleBorder(OffhandHitbox, Color.Lime * 0.2f, Color.Lime * 0.8f, 1f);
                 }
-                if (IsAttacking && EquipmentItems.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon.Type.Contains("Sword"))
+                if (IsAttacking && EquippedItems.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon.Type.Contains("Sword"))
                 {
                     float attackRadius = weapon.Texture.Height * 2f;
                     Vector2 playerCenter = Hitbox.Center.ToVector2();

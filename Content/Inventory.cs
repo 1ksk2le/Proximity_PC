@@ -29,30 +29,47 @@ namespace Proximity.Content
         private RenderTarget2D inventoryRenderTarget;
         private readonly int renderTargetWidth;
         private readonly int renderTargetHeight;
-        public bool IsOpen { get; set; }
+        private bool isOpen;
+
+        public bool IsOpen
+        {
+            get => isOpen;
+            set
+            {
+                isOpen = value;
+                if (!isOpen)
+                {
+                    Item.FreezeGameWorldAnimations = false;
+                }
+            }
+        }
 
         private const int SlotPixelSize = 120;
 
         private int? selectedItemSlot = null;
         private Texture2D statBoxTexture;
-        private const int StatBoxSpriteSize = 45; // Each sprite is 45x45
+        private Texture2D statBoxOutlineTexture;
+        private Texture2D statBoxOutlineTextureReversed;
+        private const int StatBoxSpriteSize = 45;
         private Texture2D statIconsTexture;
         private const int StatIconSize = 30;
 
         // Scrollable info box state
         private RenderTarget2D infoBoxRenderTarget;
 
-        private int infoBoxRenderTargetWidth;
-        private int infoBoxRenderTargetHeight;
         private float infoBoxScrollOffset = 0f;
         private float infoBoxLastTouchY = 0f;
         private bool infoBoxIsTouching = false;
         private int lastSelectedItemSlot = -1;
         private Texture2D starTexture;
-        private Texture2D starSmallTexture;
         private const int StarSmallIconSize = 33;
         private const int StarSmallGap = 4;
         private const int IconBoxPadding = 40;
+
+        // Player portrait render target
+        private RenderTarget2D playerPortraitRenderTarget;
+
+        private const int PortraitSize = 400;
 
         public Inventory(ContentManager content, int screenWidth, int screenHeight)
         {
@@ -71,9 +88,10 @@ namespace Proximity.Content
             renderTargetHeight = slotHeight * (VisibleRows + 2);
             try { thumbTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Thumb"); } catch { thumbTexture = slotTexture; }
             try { statBoxTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box"); } catch { statBoxTexture = null; }
+            try { statBoxOutlineTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box_Outline"); } catch { statBoxOutlineTexture = null; }
+            try { statBoxOutlineTextureReversed = content.Load<Texture2D>("Textures/UI/t_Inventory_Box_Outline_Reversed"); } catch { statBoxOutlineTexture = null; }
             try { statIconsTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Icons"); } catch { statIconsTexture = null; }
-            try { starTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Star"); } catch { starTexture = null; }
-            try { starSmallTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_StarSmall"); } catch { starSmallTexture = null; }
+            try { starTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_StarSmall"); } catch { starTexture = null; }
         }
 
         private void EnsureRenderTarget(GraphicsDevice graphicsDevice)
@@ -94,6 +112,24 @@ namespace Proximity.Content
             }
         }
 
+        private void EnsurePlayerPortraitRenderTarget(GraphicsDevice graphicsDevice)
+        {
+            if (playerPortraitRenderTarget == null ||
+                playerPortraitRenderTarget.Width != PortraitSize ||
+                playerPortraitRenderTarget.Height != PortraitSize)
+            {
+                playerPortraitRenderTarget?.Dispose();
+                playerPortraitRenderTarget = new RenderTarget2D(
+                    graphicsDevice,
+                    PortraitSize,
+                    PortraitSize,
+                    false,
+                    SurfaceFormat.Color,
+                    DepthFormat.None
+                );
+            }
+        }
+
         public void Scroll(float deltaRows)
         {
             float maxOffsetRows = (TotalSlots - 1) / Columns - VisibleRows + 1;
@@ -104,8 +140,10 @@ namespace Proximity.Content
             scrollOffset = newOffset;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
         {
+            Item.FreezeGameWorldAnimations = IsOpen;
+
             if (!IsOpen) return;
             EnsureRenderTarget(spriteBatch.GraphicsDevice);
 
@@ -228,7 +266,27 @@ namespace Proximity.Content
             if (selectedItemSlot.HasValue)
             {
                 int slotIdx = selectedItemSlot.Value;
-                Item selected = slotIdx >= 0 && slotIdx < items.Count ? items[slotIdx] : null;
+                Item selected = null;
+                if (slotIdx >= 0 && slotIdx < items.Count)
+                {
+                    selected = items[slotIdx];
+                }
+                else if (slotIdx == -100)
+                {
+                    selected = player.EquippedItems[EquipmentSlot.Weapon];
+                }
+                else if (slotIdx == -101)
+                {
+                    selected = player.EquippedItems[EquipmentSlot.Helmet];
+                }
+                else if (slotIdx == -102)
+                {
+                    selected = player.EquippedItems[EquipmentSlot.Offhand];
+                }
+                else if (slotIdx == -103)
+                {
+                    selected = player.EquippedItems[EquipmentSlot.Chestplate];
+                }
                 if (selected != null)
                 {
                     var font = Main.Font;
@@ -238,7 +296,6 @@ namespace Proximity.Content
                     int infoRegionX = statBoxScrollbarX + statBoxScrollbarWidth;
                     int infoRegionY = (screenHeight - (slotHeight * VisibleRows)) / 2;
                     int infoRegionHeight = slotHeight * VisibleRows;
-                    // --- Layout calculation ---
                     int iconBoxPadding = 35;
                     int iconBoxWidth = 0, iconBoxHeight = 0;
                     int iconDrawWidth = 0, iconDrawHeight = 0;
@@ -257,61 +314,46 @@ namespace Proximity.Content
                         iconBoxHeight = iconDrawHeight + iconBoxPadding * 2;
                     }
                     int infoBoxPadding = 20;
-                    int infoBoxWidth = iconBoxWidth;
-                    int maxTextWidth = 0;
-                    // --- Measure info content height/width (excluding icon box) ---
-                    int measureY = 0;
-                    // Name
-                    if (!string.IsNullOrEmpty(selected.GetName()))
+                    int marginX = 40;
+                    int maxInfoBoxWidth = screenWidth - marginX * 2;
+                    // --- Improved word-wrapping and alignment logic ---
+                    // Helper: Wrap text to fit max width, splitting long words if needed
+                    List<string> WrapText(string text, int maxWidth)
                     {
-                        Vector2 nameSize = font.MeasureString(selected.GetName());
-                        measureY += (int)nameSize.Y + 2;
-                        if (nameSize.X > maxTextWidth) maxTextWidth = (int)nameSize.X;
+                        var lines = new List<string>();
+                        while (!string.IsNullOrEmpty(text))
+                        {
+                            int cut = text.Length;
+                            string testLine = text.Substring(0, cut);
+                            Vector2 testSize = font.MeasureString(testLine);
+                            while (testSize.X > maxWidth && cut > 0)
+                            {
+                                int lastSpace = text.LastIndexOf(' ', cut - 1);
+                                if (lastSpace > 0)
+                                    cut = lastSpace;
+                                else
+                                {
+                                    // No space: forcibly break long word
+                                    int wordCut = cut;
+                                    while (font.MeasureString(text.Substring(0, wordCut)).X > maxWidth && wordCut > 1)
+                                        wordCut--;
+                                    cut = wordCut;
+                                    break;
+                                }
+                                testLine = text.Substring(0, cut);
+                                testSize = font.MeasureString(testLine);
+                            }
+                            if (cut == 0) cut = 1;
+                            lines.Add(text.Substring(0, cut));
+                            text = text.Substring(cut).TrimStart();
+                        }
+                        return lines;
                     }
-                    // Rarity
+
+                    // Gather all content and wrap
                     var rarityInfo = Item.GetRarityInfo(selected.Rarity);
                     string rarityText = rarityInfo.Name;
-                    if (!string.IsNullOrEmpty(rarityText))
-                    {
-                        Vector2 raritySize = font.MeasureString(rarityText);
-                        measureY += (int)raritySize.Y + 20;
-                        if (raritySize.X > maxTextWidth) maxTextWidth = (int)raritySize.X;
-                    }
-                    // Type
                     string typeText = selected.Type ?? "";
-                    if (!string.IsNullOrEmpty(typeText))
-                    {
-                        Vector2 typeSize = font.MeasureString(typeText);
-                        measureY += (int)typeSize.Y + 20;
-                        if (typeSize.X > maxTextWidth) maxTextWidth = (int)typeSize.X;
-                    }
-                    measureY += 20;
-                    // Lore
-                    List<string> loreLines = new List<string>();
-                    if (!string.IsNullOrEmpty(selected.Lore))
-                    {
-                        string lore = selected.Lore;
-                        while (lore.Length > 0)
-                        {
-                            int len = Math.Min(30, lore.Length);
-                            int cut = len;
-                            if (len < lore.Length)
-                            {
-                                int lastSpace = lore.LastIndexOf(' ', len);
-                                if (lastSpace > 0) cut = lastSpace;
-                            }
-                            loreLines.Add(lore.Substring(0, cut));
-                            lore = lore.Substring(cut).TrimStart();
-                        }
-                        foreach (var line in loreLines)
-                        {
-                            Vector2 loreSize = font.MeasureString(line);
-                            measureY += (int)loreSize.Y;
-                            if (loreSize.X > maxTextWidth) maxTextWidth = (int)loreSize.X;
-                        }
-                        measureY += 20;
-                    }
-                    // Stats
                     List<string> statDisplay = new List<string>();
                     if (selected.Damage != 0) statDisplay.Add($"{selected.Damage} damage");
                     if (selected.Knockback != 0) statDisplay.Add($"{(selected.Knockback / 100f):.00} knockback");
@@ -320,68 +362,86 @@ namespace Proximity.Content
                     if (selected.Defense != 0) statDisplay.Add($"{selected.Defense} defense");
                     if (selected.KnockbackResistance != 0) statDisplay.Add($"{selected.KnockbackResistance * 100f}% knockback resistance");
                     if (selected.Value != 0) statDisplay.Add($"{selected.Value} gold");
-                    foreach (var line in statDisplay)
-                    {
-                        Vector2 statSize = font.MeasureString(line);
-                        measureY += (int)statSize.Y;
-                        if (statSize.X > maxTextWidth) maxTextWidth = (int)statSize.X;
-                    }
                     List<(string name, string effect, bool isPrefix)> affixes = new();
                     if (!string.IsNullOrEmpty(selected.Prefix) && ItemModifier.Prefixes.Values.FirstOrDefault(p => p.Name == selected.Prefix) is Prefix prefixObj)
                         affixes.Add((prefixObj.Name, prefixObj.Effect, true));
                     if (!string.IsNullOrEmpty(selected.Suffix) && ItemModifier.Suffixes.Values.FirstOrDefault(s => s.Name == selected.Suffix) is Suffix suffixObj)
                         affixes.Add((suffixObj.Name, suffixObj.Effect, false));
-                    foreach (var (affixName, effect, isPrefix) in affixes)
-                    {
-                        measureY += 20;
-                        Vector2 affixNameSize = font.MeasureString(affixName);
-                        measureY += (int)affixNameSize.Y;
-                        if (affixNameSize.X > maxTextWidth) maxTextWidth = (int)affixNameSize.X;
-                        // Effect (wrap at 30 chars)
-                        List<string> effectLines = new List<string>();
-                        string effectLeft = effect;
-                        while (effectLeft.Length > 0)
-                        {
-                            int len = Math.Min(30, effectLeft.Length);
-                            int cut = len;
-                            if (len < effectLeft.Length)
-                            {
-                                int lastSpace = effectLeft.LastIndexOf(' ', len);
-                                if (lastSpace > 0) cut = lastSpace;
-                            }
-                            effectLines.Add(effectLeft.Substring(0, cut));
-                            effectLeft = effectLeft.Substring(cut).TrimStart();
-                        }
-                        foreach (var line in effectLines)
-                        {
-                            Vector2 effSize = font.MeasureString(line);
-                            measureY += (int)effSize.Y;
-                            if (effSize.X > maxTextWidth) maxTextWidth = (int)effSize.X;
-                        }
-                    }
-                    // Debug info
                     string debugLine = null;
                     if (Main.DebugMode)
-                    {
                         debugLine = $"#DEBUG-ID: {selected.ID}, #DEBUG-PREFIX: {selected.Prefix}, #DEBUG-SUFFIX: {selected.Suffix}";
-                        Vector2 dbgSize = font.MeasureString(debugLine);
-                        measureY += (int)dbgSize.Y;
-                        if (dbgSize.X > maxTextWidth) maxTextWidth = (int)dbgSize.X;
+
+                    // Find longest line for provisional width
+                    int minInfoBoxWidth = 570; // Increased minimum width for better readability
+                    int provisionalWidth = Math.Max(minInfoBoxWidth, Math.Min(maxInfoBoxWidth, Math.Max(iconBoxWidth, minInfoBoxWidth)));
+                    int maxTextWidth = 0;
+                    List<string> allWrappedLines = new List<string>();
+                    void AddWrapped(string text)
+                    {
+                        foreach (var line in WrapText(text, provisionalWidth - infoBoxPadding * 2))
+                        {
+                            allWrappedLines.Add(line);
+                            int w = (int)font.MeasureString(line).X;
+                            if (w > maxTextWidth) maxTextWidth = w;
+                        }
                     }
+                    if (!string.IsNullOrEmpty(selected.GetName())) AddWrapped(selected.GetName());
+                    if (!string.IsNullOrEmpty(rarityText)) AddWrapped(rarityText);
+                    if (!string.IsNullOrEmpty(typeText)) AddWrapped(typeText);
+                    if (!string.IsNullOrEmpty(selected.Lore)) AddWrapped(selected.Lore);
+                    foreach (var line in statDisplay) AddWrapped(line);
+                    foreach (var (affixName, effect, isPrefix) in affixes) { AddWrapped(affixName); AddWrapped(effect); }
+                    if (Main.DebugMode && debugLine != null) AddWrapped(debugLine);
+
+                    int maxInfoBoxWidthNoOverlap = screenWidth - infoRegionX - 40;
+                    int infoBoxWidth = Math.Max(minInfoBoxWidth, Math.Min(Math.Max(iconBoxWidth, maxTextWidth + infoBoxPadding * 2), Math.Min(maxInfoBoxWidth, maxInfoBoxWidthNoOverlap)));
+
+                    // --- Second pass: wrap all content using final infoBoxWidth ---
+                    List<string> nameLines = !string.IsNullOrEmpty(selected.GetName()) ? WrapText(selected.GetName(), infoBoxWidth - infoBoxPadding * 2) : new List<string>();
+                    // Rarity text removed from info box content
+                    List<string> typeLines = !string.IsNullOrEmpty(typeText) ? WrapText(typeText, infoBoxWidth - infoBoxPadding * 2) : new List<string>();
+                    List<string> loreLines = !string.IsNullOrEmpty(selected.Lore) ? WrapText(selected.Lore, infoBoxWidth - infoBoxPadding * 2) : new List<string>();
+                    List<List<string>> statLines = statDisplay.Select(s => WrapText(s, infoBoxWidth - infoBoxPadding * 2)).ToList();
+                    List<(List<string> name, List<string> effect, bool isPrefix)> affixLines = affixes.Select(a => (WrapText(a.name, infoBoxWidth - infoBoxPadding * 2), WrapText(a.effect, infoBoxWidth - infoBoxPadding * 2), a.isPrefix)).ToList();
+                    List<string> debugLines = (Main.DebugMode && debugLine != null) ? WrapText(debugLine, infoBoxWidth - infoBoxPadding * 2) : new List<string>();
+
+                    // --- Measure total height ---
+                    int measureY = 0;
+                    foreach (var line in nameLines) measureY += (int)font.MeasureString(line).Y;
+                    if (nameLines.Count > 0) measureY += 2;
+                    // Rarity text is not rendered in the info box, so do not measure its height
+                    foreach (var line in typeLines) measureY += (int)font.MeasureString(line).Y;
+                    if (typeLines.Count > 0) measureY += 30;
+                    measureY += 30;
+                    foreach (var line in loreLines) measureY += (int)font.MeasureString(line).Y;
+                    if (loreLines.Count > 0) measureY += 30;
+                    foreach (var stat in statLines) foreach (var line in stat) measureY += (int)font.MeasureString(line).Y;
+                    // Add item.Info lines to measureY
+                    if (!string.IsNullOrEmpty(selected.Info))
+                    {
+                        var infoLines = WrapText(selected.Info, infoBoxWidth - infoBoxPadding * 2);
+                        foreach (var line in infoLines) measureY += (int)font.MeasureString(line).Y;
+                    }
+                    foreach (var affix in affixLines)
+                    {
+                        measureY += 30;
+                        foreach (var line in affix.name) measureY += (int)font.MeasureString(line).Y;
+                        foreach (var line in affix.effect) measureY += (int)font.MeasureString(line).Y;
+                    }
+                    foreach (var line in debugLines) measureY += (int)font.MeasureString(line).Y;
                     measureY += IconBoxPadding;
-                    infoBoxWidth = Math.Max(infoBoxWidth, maxTextWidth + infoBoxPadding * 2);
                     // --- Icon box is fixed, info content is scrollable ---
-                    int totalInfoBoxHeight = infoRegionHeight;
+                    // Dynamically set info box height based on screen size
+                    int totalInfoBoxHeight = Math.Min(infoRegionHeight, screenHeight - infoRegionY - 40); // 40px margin at bottom
                     int infoContentBoxHeight = totalInfoBoxHeight - iconBoxHeight;
                     if (infoContentBoxHeight < 40) infoContentBoxHeight = 40;
                     int infoBoxRenderTargetHeightFinal = measureY + infoBoxPadding * 2;
-                    // --- Render info content to RenderTarget2D ---
-                    if (infoBoxRenderTarget == null || infoBoxRenderTarget.Width != infoBoxWidth || infoBoxRenderTarget.Height != infoBoxRenderTargetHeightFinal)
+                    // --- Add 20px gap after last text line ---
+                    int infoBoxRenderTargetHeightFinalWithGap = infoBoxRenderTargetHeightFinal;
+                    if (infoBoxRenderTarget == null || infoBoxRenderTarget.Width != infoBoxWidth || infoBoxRenderTarget.Height != infoBoxRenderTargetHeightFinalWithGap)
                     {
                         infoBoxRenderTarget?.Dispose();
-                        infoBoxRenderTarget = new RenderTarget2D(spriteBatch.GraphicsDevice, infoBoxWidth, infoBoxRenderTargetHeightFinal);
-                        infoBoxRenderTargetWidth = infoBoxWidth;
-                        infoBoxRenderTargetHeight = infoBoxRenderTargetHeightFinal;
+                        infoBoxRenderTarget = new RenderTarget2D(spriteBatch.GraphicsDevice, infoBoxWidth, infoBoxRenderTargetHeightFinalWithGap);
                     }
                     spriteBatch.GraphicsDevice.SetRenderTarget(infoBoxRenderTarget);
                     spriteBatch.GraphicsDevice.Clear(Color.Transparent);
@@ -389,121 +449,97 @@ namespace Proximity.Content
                     {
                         infoBatch.Begin();
                         int infoY = infoBoxPadding;
-                        // Name (wrap)
-                        if (!string.IsNullOrEmpty(selected.GetName()))
+                        // Name (centered)
+                        foreach (var nameLine in nameLines)
                         {
-                            List<string> nameLines = new List<string>();
-                            string nameLeft = selected.GetName();
-                            while (nameLeft.Length > 0)
-                            {
-                                int len = Math.Min(30, nameLeft.Length);
-                                int cut = len;
-                                if (len < nameLeft.Length)
-                                {
-                                    int lastSpace = nameLeft.LastIndexOf(' ', len);
-                                    if (lastSpace > 0) cut = lastSpace;
-                                }
-                                nameLines.Add(nameLeft.Substring(0, cut));
-                                nameLeft = nameLeft.Substring(cut).TrimStart();
-                            }
-                            foreach (var nameLine in nameLines)
-                            {
-                                Vector2 nameSize2 = font.MeasureString(nameLine);
-                                int nameX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)nameSize2.X) / 2;
-                                font.DrawString(infoBatch, nameLine, new Vector2(nameX, infoY), rarityInfo.Color);
-                                infoY += (int)nameSize2.Y;
-                            }
-                            infoY += 2;
+                            Vector2 nameSize = font.MeasureString(nameLine);
+                            int nameX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)nameSize.X) / 2;
+                            font.DrawString(infoBatch, nameLine, new Vector2(nameX, infoY), rarityInfo.Color);
+                            infoY += (int)nameSize.Y;
                         }
-                        // Type
-                        if (!string.IsNullOrEmpty(typeText))
+                        if (nameLines.Count > 0) infoY += 2;
+                        // Type (centered)
+                        foreach (var typeLine in typeLines)
                         {
-                            Vector2 typeSize2 = font.MeasureString(typeText);
-                            int typeX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)typeSize2.X) / 2 + 20;
-                            font.DrawString(infoBatch, typeText, new Vector2(typeX, infoY), Color.Yellow);
-                            infoY += (int)typeSize2.Y;
+                            Vector2 typeSize = font.MeasureString(typeLine);
+                            int typeX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)typeSize.X) / 2;
+                            font.DrawString(infoBatch, typeLine, new Vector2(typeX, infoY), Color.Yellow);
+                            infoY += (int)typeSize.Y;
                         }
-                        infoY += 20;
-                        int loreStartY = infoY;
-                        int totalLoreHeight = 0;
-                        foreach (var line in loreLines)
-                            totalLoreHeight += (int)font.MeasureString(line).Y;
-                        if (loreLines.Count > 0) totalLoreHeight += 2;
-                        int loreYBottomAligned = loreStartY - totalLoreHeight;
-                        int loreYAfterContent = infoY + 20; // 20px padding after last info line
-                        int loreY = Math.Max(loreYBottomAligned, loreYAfterContent);
-                        infoY = loreY;
-                        for (int i = 0; i < loreLines.Count; i++)
+                        if (typeLines.Count > 0) infoY += 10;
+                        infoY += 10;
+                        // Lore (centered)
+                        foreach (var loreLine in loreLines)
                         {
-                            var line = loreLines[i];
-                            Vector2 lineSize = font.MeasureString(line);
-                            if (i == loreLines.Count - 1)
-                            {
-                                int loreCenterX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)lineSize.X) / 2;
-                                font.DrawString(infoBatch, line, new Vector2(loreCenterX, infoY), Color.MediumAquamarine);
-                            }
-                            else
-                            {
-                                font.DrawString(infoBatch, line, new Vector2(infoBoxPadding, infoY), Color.MediumAquamarine);
-                            }
-                            infoY += (int)lineSize.Y;
+                            Vector2 loreSize = font.MeasureString(loreLine);
+                            int loreX = infoBoxPadding + ((infoBoxWidth - infoBoxPadding * 2) - (int)loreSize.X) / 2;
+                            font.DrawString(infoBatch, loreLine, new Vector2(loreX, infoY), Color.MediumAquamarine);
+                            infoY += (int)loreSize.Y;
                         }
-                        infoY += 20;
-                        // Stats
-                        for (int i = 0; i < statDisplay.Count; i++)
+                        if (loreLines.Count > 0) infoY += 30;
+                        // Stats (left-aligned, with icons)
+                        for (int i = 0; i < statLines.Count; i++)
                         {
-                            string line = statDisplay[i];
                             int iconIndex = -1;
-                            if (line.Contains("damage")) iconIndex = 0;
-                            else if (line.Contains("knockback")) iconIndex = 1;
-                            else if (line.Contains("range")) iconIndex = 2;
-                            else if (line.Contains("uses per second")) iconIndex = 3;
-                            else if (line.Contains("defense")) iconIndex = 4;
-                            else if (line.Contains("knockback resistance")) iconIndex = 5;
-                            else if (line.Contains("gold")) iconIndex = 6;
-                            int statIconY = infoY;
-                            if (statIconsTexture != null && iconIndex >= 0)
+                            string statRaw = statDisplay.Count > i ? statDisplay[i] : "";
+                            if (statRaw.Contains("damage")) iconIndex = 0;
+                            else if (statRaw.Contains("knockback")) iconIndex = 1;
+                            else if (statRaw.Contains("range")) iconIndex = 2;
+                            else if (statRaw.Contains("uses per second")) iconIndex = 3;
+                            else if (statRaw.Contains("defense")) iconIndex = 4;
+                            else if (statRaw.Contains("knockback resistance")) iconIndex = 5;
+                            else if (statRaw.Contains("gold")) iconIndex = 6;
+                            foreach (var statLine in statLines[i])
                             {
-                                Rectangle statIconSrcRect = new Rectangle(0, iconIndex * StatIconSize, StatIconSize, StatIconSize);
-                                Vector2 iconPos = new Vector2(infoBoxPadding, infoY + 2);
-                                infoBatch.Draw(statIconsTexture, iconPos, statIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                                if (statIconsTexture != null && iconIndex >= 0)
+                                {
+                                    Rectangle statIconSrcRect = new Rectangle(0, iconIndex * StatIconSize, StatIconSize, StatIconSize);
+                                    Vector2 iconPos = new Vector2(infoBoxPadding, infoY + 2);
+                                    infoBatch.Draw(statIconsTexture, iconPos, statIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                                }
+                                float textOffsetX = statIconsTexture != null && iconIndex >= 0 ? StatIconSize + 8 : 0;
+                                font.DrawString(infoBatch, statLine, new Vector2(infoBoxPadding + textOffsetX, infoY), Color.White);
+                                infoY += (int)font.MeasureString(statLine).Y;
                             }
-                            float textOffsetX = statIconsTexture != null && iconIndex >= 0 ? StatIconSize + 8 : 0;
-                            font.DrawString(infoBatch, line, new Vector2(infoBoxPadding + textOffsetX, infoY), Color.White);
-                            infoY += (int)font.MeasureString(line).Y;
                         }
-                        // Prefix/suffix
-                        foreach (var (affixName, effect, isPrefix) in affixes)
+                        // Info text (left-aligned, CornflowerBlue)
+                        // Info text (left-aligned, with icon, color: White)
+                        if (!string.IsNullOrEmpty(selected.Info))
                         {
-                            infoY += 20;
-                            string affixLabel = isPrefix ? "[Prefix Bonus]" : "[Suffix Bonus]";
+                            var infoLines = WrapText(selected.Info, infoBoxWidth - infoBoxPadding * 2);
+                            int infoIconIndex = 7; // Last frame in statIconsTexture for item.Info
+                            for (int i = 0; i < infoLines.Count; i++)
+                            {
+                                float textOffsetX = 0;
+                                if (i == 0 && statIconsTexture != null)
+                                {
+                                    Rectangle infoIconSrcRect = new Rectangle(0, infoIconIndex * StatIconSize, StatIconSize, StatIconSize);
+                                    Vector2 iconPos = new Vector2(infoBoxPadding, infoY + 2);
+                                    infoBatch.Draw(statIconsTexture, iconPos, infoIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                                    textOffsetX = StatIconSize + 8;
+                                }
+                                font.DrawString(infoBatch, infoLines[i], new Vector2(infoBoxPadding + textOffsetX, infoY), Color.White);
+                                infoY += (int)font.MeasureString(infoLines[i]).Y;
+                            }
+                        }
+                        // Prefix/suffix (left-aligned)
+                        foreach (var affix in affixLines)
+                        {
+                            infoY += 30;
+                            string affixLabel = affix.isPrefix ? "[Prefix Bonus]" : "[Suffix Bonus]";
                             font.DrawString(infoBatch, affixLabel, new Vector2(infoBoxPadding, infoY), Color.Yellow);
                             infoY += (int)font.MeasureString(affixLabel).Y;
-                            List<string> effectLines = new List<string>();
-                            string effectLeft = effect;
-                            while (effectLeft.Length > 0)
-                            {
-                                int len = Math.Min(30, effectLeft.Length);
-                                int cut = len;
-                                if (len < effectLeft.Length)
-                                {
-                                    int lastSpace = effectLeft.LastIndexOf(' ', len);
-                                    if (lastSpace > 0) cut = lastSpace;
-                                }
-                                effectLines.Add(effectLeft.Substring(0, cut));
-                                effectLeft = effectLeft.Substring(cut).TrimStart();
-                            }
-                            foreach (var line in effectLines)
+                            foreach (var line in affix.effect)
                             {
                                 font.DrawString(infoBatch, line, new Vector2(infoBoxPadding, infoY), Color.CornflowerBlue);
                                 infoY += (int)font.MeasureString(line).Y;
                             }
                         }
-                        // Debug info
-                        if (Main.DebugMode && debugLine != null)
+                        // Debug info (left-aligned)
+                        foreach (var dbgLine in debugLines)
                         {
-                            font.DrawString(infoBatch, debugLine, new Vector2(infoBoxPadding, infoY), Color.Red);
-                            infoY += (int)font.MeasureString(debugLine).Y;
+                            font.DrawString(infoBatch, dbgLine, new Vector2(infoBoxPadding, infoY), Color.Red);
+                            infoY += (int)font.MeasureString(dbgLine).Y;
                         }
                         infoBatch.End();
                     }
@@ -520,7 +556,7 @@ namespace Proximity.Content
                             int rarityX = infoRegionX + ((infoBoxWidth - (int)raritySize.X) / 2);
                             int rarityY = infoRegionY + 10;
                             font.DrawString(spriteBatch, rarityText, new Vector2(rarityX, rarityY), rarityInfo.Color);
-                            if (starSmallTexture != null)
+                            if (starTexture != null)
                             {
                                 int starCount = selected.Rarity + 1;
                                 int totalStarsWidth = starCount * StarSmallIconSize + (starCount - 1) * StarSmallGap;
@@ -529,7 +565,7 @@ namespace Proximity.Content
                                 for (int i = 0; i < starCount; i++)
                                 {
                                     int starX = starsStartX + i * (StarSmallIconSize + StarSmallGap);
-                                    spriteBatch.Draw(starSmallTexture, new Rectangle(starX, starsY, StarSmallIconSize, StarSmallIconSize), Color.White);
+                                    spriteBatch.Draw(starTexture, new Rectangle(starX, starsY, StarSmallIconSize, StarSmallIconSize), Color.White);
                                 }
                             }
                         }
@@ -553,10 +589,14 @@ namespace Proximity.Content
                         iconBoxHeight += IconBoxPadding;
                     }
                     // --- Draw info content (scrollable) ---
-                    int infoContentX = infoRegionX;
+                    // Clamp info box X so it never exceeds screen borders
+                    int infoBoxScreenX = Math.Max(marginX, Math.Min(screenWidth - infoBoxWidth - marginX, infoRegionX));
+                    int infoContentX = infoBoxScreenX;
                     int infoContentY = infoRegionY + iconBoxHeight;
-                    Rectangle infoContentDestRect = new Rectangle(infoContentX, infoContentY, infoBoxWidth, infoContentBoxHeight - IconBoxPadding);
-                    Rectangle infoContentSrcRect = new Rectangle(0, (int)infoBoxScrollOffset, infoBoxWidth, infoContentBoxHeight - IconBoxPadding);
+                    // Cap info content box height to fit on screen (Y axis untouched)
+                    int cappedInfoContentBoxHeight = infoContentBoxHeight;
+                    Rectangle infoContentDestRect = new Rectangle(infoContentX, infoContentY, infoBoxWidth, cappedInfoContentBoxHeight - IconBoxPadding);
+                    Rectangle infoContentSrcRect = new Rectangle(0, (int)infoBoxScrollOffset, infoBoxWidth, cappedInfoContentBoxHeight - IconBoxPadding);
                     if (statBoxTexture != null)
                     {
                         DrawNineSliceBox(spriteBatch, statBoxTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
@@ -607,31 +647,90 @@ namespace Proximity.Content
                         }
                     }
 
-                    /*if (selected != null)
+                    DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
+                }
+            }
+            int equipmentBoxWidth = 570;
+            int equipmentBoxHeight = slotHeight * VisibleRows;
+            int equipmentBoxX = startX - equipmentBoxWidth; // 30px gap to the left of inventory
+            int equipmentBoxY = startY;
+            Rectangle equipmentBoxRect = new Rectangle(equipmentBoxX, equipmentBoxY, equipmentBoxWidth, equipmentBoxHeight);
+            if (statBoxOutlineTexture != null)
+            {
+                DrawNineSliceBox(spriteBatch, statBoxTexture, equipmentBoxRect, StatBoxSpriteSize, Color.White, false);
+                int eqSlotSize = 120;
+                int eqSlotPaddingY = 30;
+                int eqSlotPaddingX = 40;
+                int eqSlotGapY = ((equipmentBoxHeight - eqSlotPaddingY * 2) - (eqSlotSize * 4)) / 3;
+
+                EnsurePlayerPortraitRenderTarget(spriteBatch.GraphicsDevice);
+                RenderPlayerPortrait(spriteBatch.GraphicsDevice, player, gameTime);
+
+                // Draw player portrait in center of equipment box
+                Vector2 playerPortraitPos = new Vector2(
+                    equipmentBoxRect.X + equipmentBoxRect.Width / 2,
+                    equipmentBoxRect.Y + equipmentBoxRect.Height / 2
+                );
+                float portraitScale = 1f;
+                Vector2 portraitOrigin = new Vector2(PortraitSize / 2, PortraitSize / 2);
+                spriteBatch.Draw(playerPortraitRenderTarget, playerPortraitPos, null, Color.White, 0f, portraitOrigin, portraitScale, SpriteEffects.None, 0.32f);
+                // Helper for slot rendering
+                for (int col = 0; col < 2; col++)
+                {
+                    for (int i = 0; i < 4; i++)
                     {
-                        if (starTexture != null)
+                        int slotY = equipmentBoxY + eqSlotPaddingY + i * (eqSlotSize + eqSlotGapY);
+                        int slotX = (col == 0)
+                            ? equipmentBoxX + eqSlotPaddingX
+                            : equipmentBoxX + equipmentBoxWidth - eqSlotPaddingX - eqSlotSize;
+                        Item equipped = null;
+                        if (col == 0)
                         {
-                            int starCount = selected.Rarity + 1;
-                            int totalStarsWidth = starCount * StarIconSize + (starCount - 1) * StarGap;
-                            int starsStartX = infoRegionX + (infoBoxWidth - totalStarsWidth) / 2;
-                            int seamY = infoRegionY + iconBoxHeight; // seam between icon and info box
-                            int centerY = seamY; // vertical center of stars aligns with seam
-                            int starCenterY = centerY;
-                            int starTopY = starCenterY - StarIconSize / 2;
-                            for (int i = 0; i < starCount; i++)
-                            {
-                                int starX = starsStartX + i * (StarIconSize + StarGap);
-                                spriteBatch.Draw(starTexture, new Rectangle(starX, starTopY, StarIconSize, StarIconSize), Color.White);
-                            }
+                            if (i == 0 && player.EquippedItems[EquipmentSlot.Weapon] != null) equipped = player.EquippedItems[EquipmentSlot.Weapon];
+                            else if (i == 1 && player.EquippedItems[EquipmentSlot.Helmet] != null) equipped = player.EquippedItems[EquipmentSlot.Helmet];
                         }
-                    }*/
+                        else
+                        {
+                            if (i == 0 && player.EquippedItems[EquipmentSlot.Offhand] != null) equipped = player.EquippedItems[EquipmentSlot.Offhand];
+                            else if (i == 1 && player.EquippedItems[EquipmentSlot.Chestplate] != null) equipped = player.EquippedItems[EquipmentSlot.Chestplate];
+                        }
+                        int rarity = equipped != null ? equipped.Rarity : 0;
+                        if (rarity < 0 || rarity > 6) rarity = 0;
+                        var rarityInfo = equipped != null ? Item.GetRarityInfo(equipped.Rarity) : Item.GetRarityInfo(0);
+                        Color slotColor = rarityInfo.Color;
+                        Rectangle eqSlotSrcRect = new Rectangle(0, rarity * eqSlotSize, eqSlotSize, eqSlotSize);
+                        Rectangle eqSlotRect = new Rectangle(slotX, slotY, eqSlotSize, eqSlotSize);
+                        spriteBatch.Draw(slotTexture, eqSlotRect, eqSlotSrcRect, slotColor * 0.85f);
+                        if (equipped != null && equipped.Texture != null)
+                        {
+                            int itemAreaSize = 100;
+                            int itemAreaOffset = (slotWidth - itemAreaSize) / 2;
+                            var tex = equipped.Texture;
+                            int srcW = tex.Width;
+                            int srcH = tex.Height;
+                            string type = equipped.Type ?? "";
+                            bool isReducedScale = type.Contains("[Chestplate]") || type.Contains("[Helmet]") || type.Contains("[Offhand]") || type.Contains("Gun");
+                            Rectangle srcRectSwordStaff = new Rectangle(0, 0, srcW, srcH);
+                            float baseScale = Math.Min((float)itemAreaSize / srcW, (float)itemAreaSize / srcH) * 0.8f;
+                            float scale = isReducedScale ? baseScale * 0.8f : baseScale;
+                            int drawWidth = (int)(srcW * scale);
+                            int drawHeight = (int)(srcH * scale);
+                            int drawX = slotX + itemAreaOffset + (itemAreaSize - drawWidth) / 2;
+                            int drawXShadow = slotX + itemAreaOffset + (int)(itemAreaSize - drawWidth * 1.1f) / 2;
+                            int drawY = slotY + itemAreaOffset + (itemAreaSize - drawHeight) / 2;
+                            Rectangle drawRect = new Rectangle(drawX, drawY, drawWidth, drawHeight);
+                            Rectangle drawRectShadow = new Rectangle(drawXShadow, drawY + 10, (int)(drawWidth * 1.1f), (int)(drawHeight * 1.1f));
+                            spriteBatch.Draw(tex, drawRectShadow, srcRectSwordStaff, Color.Black * 0.3f);
+                            spriteBatch.Draw(tex, drawRect, Color.White);
+                        }
+                    }
                 }
             }
         }
 
         private int previousWheelValue = 0;
 
-        public void Update(TouchCollection touches)
+        public void Update(TouchCollection touches, Player player)
         {
             if (!IsOpen) return;
             bool mouseClicked = false;
@@ -729,27 +828,86 @@ namespace Proximity.Content
                     {
                         isTouching = true;
                         lastTouchY = inputPos.Y;
-                        // Detect item selection (only if not in info box)
+                        // Only allow selection if inside inventory grid area or equipment slots
                         int startY = (screenHeight - (slotHeight * VisibleRows)) / 2;
                         int startX = (screenWidth - (slotWidth * Columns)) / 2;
-                        int localX = (int)inputPos.X - startX;
-                        int localY = (int)inputPos.Y - startY;
-                        int col = localX / slotWidth;
-                        int row = localY / slotHeight;
-                        if (col >= 0 && col < Columns && row >= 0 && row < VisibleRows)
+                        Rectangle inventoryRect = new Rectangle(startX, startY, slotWidth * Columns, slotHeight * VisibleRows);
+                        int equipmentBoxWidth = 570;
+                        int equipmentBoxHeight = slotHeight * VisibleRows;
+                        int equipmentBoxX = startX - equipmentBoxWidth;
+                        int equipmentBoxY = startY;
+                        int eqSlotSize = 120;
+                        int eqSlotPaddingY = 30;
+                        int eqSlotPaddingX = 40;
+                        int eqSlotGapY = ((equipmentBoxHeight - eqSlotPaddingY * 2) - (eqSlotSize * 4)) / 3;
+                        bool foundEquipSlot = false;
+                        // Check equipment slots (left column)
+                        for (int i = 0; i < 4; i++)
                         {
-                            int slotIndex = ((int)scrollOffset + row) * Columns + col;
-                            if (slotIndex >= 0 && slotIndex < TotalSlots)
+                            int slotY = equipmentBoxY + eqSlotPaddingY + i * (eqSlotSize + eqSlotGapY);
+                            int slotX = equipmentBoxX + eqSlotPaddingX;
+                            Rectangle eqSlotRect = new Rectangle(slotX, slotY, eqSlotSize, eqSlotSize);
+                            if (eqSlotRect.Contains((int)inputPos.X, (int)inputPos.Y))
                             {
-                                if (GetItem(slotIndex) != null)
-                                    selectedItemSlot = slotIndex;
+                                // Weapon (i==0), Helmet (i==1)
+                                if (i == 0 && player.EquippedItems[EquipmentSlot.Weapon] != null)
+                                    selectedItemSlot = -100;
+                                else if (i == 1 && player.EquippedItems[EquipmentSlot.Helmet] != null)
+                                    selectedItemSlot = -101;
                                 else
                                     selectedItemSlot = null;
+                                foundEquipSlot = true;
+                                break;
                             }
                         }
-                        else
+                        // Check equipment slots (right column) if not found
+                        if (!foundEquipSlot)
                         {
-                            selectedItemSlot = null;
+                            for (int i = 0; i < 4; i++)
+                            {
+                                int slotY = equipmentBoxY + eqSlotPaddingY + i * (eqSlotSize + eqSlotGapY);
+                                int slotX = equipmentBoxX + equipmentBoxWidth - eqSlotPaddingX - eqSlotSize;
+                                Rectangle eqSlotRect = new Rectangle(slotX, slotY, eqSlotSize, eqSlotSize);
+                                if (eqSlotRect.Contains((int)inputPos.X, (int)inputPos.Y))
+                                {
+                                    // Offhand (i==0), Chestplate (i==1)
+                                    if (i == 0 && player.EquippedItems[EquipmentSlot.Offhand] != null)
+                                        selectedItemSlot = -102;
+                                    else if (i == 1 && player.EquippedItems[EquipmentSlot.Chestplate] != null)
+                                        selectedItemSlot = -103;
+                                    else
+                                        selectedItemSlot = null;
+                                    foundEquipSlot = true;
+                                    break;
+                                }
+                            }
+                        }
+                        // If not found in equipment, check inventory
+                        if (!foundEquipSlot)
+                        {
+                            if (inventoryRect.Contains((int)inputPos.X, (int)inputPos.Y))
+                            {
+                                int localX = (int)inputPos.X - startX;
+                                int localY = (int)inputPos.Y - startY;
+                                int col = localX / slotWidth;
+                                int row = localY / slotHeight;
+                                if (col >= 0 && col < Columns && row >= 0 && row < VisibleRows)
+                                {
+                                    int slotIndex = ((int)scrollOffset + row) * Columns + col;
+                                    if (slotIndex >= 0 && slotIndex < TotalSlots && GetItem(slotIndex) != null)
+                                        selectedItemSlot = slotIndex;
+                                    else
+                                        selectedItemSlot = null;
+                                }
+                                else
+                                {
+                                    selectedItemSlot = null;
+                                }
+                            }
+                            else
+                            {
+                                selectedItemSlot = null;
+                            }
                         }
                     }
                 }
@@ -867,45 +1025,233 @@ namespace Proximity.Content
             return false;
         }
 
-        private void DrawNineSliceBox(SpriteBatch spriteBatch, Texture2D texture, Rectangle dest, int spriteSize, Color color)
+        private static DateTime portraitStartTime = DateTime.Now;
+
+        private void RenderPlayerPortrait(GraphicsDevice graphicsDevice, Player player, GameTime gameTime)
         {
-            // New 9-slice sizes:
-            // Corners: 45x45
-            // Top/Bottom mid: 5x45
-            // Left/Right mid: 45x5
-            // Center: 5x5
-            int corner = 45;
-            int edgeShort = 5;
-            // Source rectangles
-            Rectangle srcTL = new Rectangle(0, 0, corner, corner);
-            Rectangle srcTM = new Rectangle(corner, 0, edgeShort, corner);
-            Rectangle srcTR = new Rectangle(corner + edgeShort, 0, corner, corner);
-            Rectangle srcML = new Rectangle(0, corner, corner, edgeShort);
-            Rectangle srcMM = new Rectangle(corner, corner, edgeShort, edgeShort);
-            Rectangle srcMR = new Rectangle(corner + edgeShort, corner, corner, edgeShort);
-            Rectangle srcBL = new Rectangle(0, corner + edgeShort, corner, corner);
-            Rectangle srcBM = new Rectangle(corner, corner + edgeShort, edgeShort, corner);
-            Rectangle srcBR = new Rectangle(corner + edgeShort, corner + edgeShort, corner, corner);
+            var prevRenderTargets = graphicsDevice.GetRenderTargets();
+            graphicsDevice.SetRenderTarget(playerPortraitRenderTarget);
+            graphicsDevice.Clear(Color.Transparent);
 
-            int x0 = dest.X;
-            int x1 = dest.X + corner;
-            int x2 = dest.Right - corner;
-            int y0 = dest.Y;
-            int y1 = dest.Y + corner;
-            int y2 = dest.Bottom - corner;
+            using (SpriteBatch portraitBatch = new SpriteBatch(graphicsDevice))
+            {
+                portraitBatch.Begin();
 
+                // Set portrait rendering flag
+                Item.IsRenderingPortrait = true;
+
+                // Create continuous GameTime for item animations
+                TimeSpan totalTime = DateTime.Now - portraitStartTime;
+                GameTime continuousGameTime = new GameTime(totalTime, TimeSpan.FromMilliseconds(16.67)); // ~60fps
+
+                // Store original player values
+                Vector2 originalPosition = player.Position;
+                float originalScale = player.CurrentScale;
+                bool originalFacingLeft = player.IsFacingLeft;
+                bool originalIsJumping = player.IsJumping;
+                bool originalIsMoving = player.IsMoving;
+                bool originalIsKnocked = player.IsKnocked;
+                bool originalIsImmune = player.IsImmune;
+                float originalJumpTime = player.JumpTime;
+                float originalWalkTimer = player.WalkTimer;
+
+                // Store timer values using reflection
+                var hurtFlashTimerField = typeof(Player).GetField("hurtFlashTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var knockbackTimerField = typeof(Player).GetField("KnockbackTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var knockbackRotationField = typeof(Player).GetField("KnockbackRotation", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                var headRotationField = typeof(Player).GetField("headRotation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var eyeRotationField = typeof(Player).GetField("eyeRotation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var eyeTimerField = typeof(Player).GetField("EyeTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var isEyeOpenField = typeof(Player).GetField("IsEyeOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var eyeBlinkIntervalField = typeof(Player).GetField("EyeBlinkInterval", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                float originalHurtFlashTimer = (float)(hurtFlashTimerField?.GetValue(player) ?? 0f);
+                float originalKnockbackTimer = (float)(knockbackTimerField?.GetValue(player) ?? 0f);
+                float originalKnockbackRotation = (float)(knockbackRotationField?.GetValue(player) ?? 0f);
+                float originalHeadRotation = (float)(headRotationField?.GetValue(player) ?? 0f);
+                float originalEyeRotation = (float)(eyeRotationField?.GetValue(player) ?? 0f);
+                float originalEyeTimer = (float)(eyeTimerField?.GetValue(player) ?? 0f);
+                bool originalIsEyeOpen = (bool)(isEyeOpenField?.GetValue(player) ?? true);
+                float originalEyeBlinkInterval = (float)(eyeBlinkIntervalField?.GetValue(player) ?? 1f);
+                bool originalIsAttacking = player.IsAttacking;
+
+                // Set portrait values temporarily
+                Vector2 portraitCenter = new Vector2(PortraitSize / 2 + 30, PortraitSize / 2 + 120);
+                player.Position = portraitCenter - new Vector2(player.T_Body.Width / 2, player.T_Body.Height / 2);
+                player.CurrentScale = 1.0f;
+                player.IsFacingLeft = false;
+
+                // Disable all animations and effects for static portrait
+                typeof(Player).GetField("IsJumping", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
+                typeof(Player).GetField("IsMoving", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
+                typeof(Player).GetField("IsKnocked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
+                typeof(Player).GetField("IsImmune", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
+                typeof(Player).GetField("jumpTime", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, 0.75f);
+                hurtFlashTimerField?.SetValue(player, 0f);
+                knockbackTimerField?.SetValue(player, 0f);
+                knockbackRotationField?.SetValue(player, 0f);
+                headRotationField?.SetValue(player, 0f);
+                eyeRotationField?.SetValue(player, 0f);
+
+                // Force eyes to stay open
+                eyeTimerField?.SetValue(player, 0f);
+                isEyeOpenField?.SetValue(player, true);
+                eyeBlinkIntervalField?.SetValue(player, 999f); // Very long interval to prevent blinking
+
+                // Force player to not be attacking for weapon idle animations
+                typeof(Player).GetField("IsAttacking", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
+
+                // Don't update hitboxes during portrait rendering to prevent world hitbox corruption
+
+                // Disable head rotation by clearing movement and attack directions
+                var movementDirectionField = typeof(Player).GetField("MovementDirection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var attackDirectionField = typeof(Player).GetField("attackDirection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                Vector2 originalMovementDirection = (Vector2)(movementDirectionField?.GetValue(player) ?? Vector2.Zero);
+                Vector2 originalAttackDirection = (Vector2)(attackDirectionField?.GetValue(player) ?? Vector2.Zero);
+                movementDirectionField?.SetValue(player, Vector2.Zero);
+                attackDirectionField?.SetValue(player, Vector2.Zero);
+
+                player.DrawShadow(portraitBatch, 0.3f);
+
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null && item.DrawSlot == DrawSlot.BelowBody)
+                    {
+                        item.PreDraw(portraitBatch, continuousGameTime, player, 0.309f);
+                        item.PostDraw(portraitBatch, continuousGameTime, player, 0.309f);
+                    }
+                }
+                player.DrawBaseBody(portraitBatch, continuousGameTime, 0.31f);
+
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null && item.DrawSlot == DrawSlot.AboveBody)
+                    {
+                        item.PreDraw(portraitBatch, continuousGameTime, player, 0.312f);
+                        item.PostDraw(portraitBatch, continuousGameTime, player, 0.312f);
+                    }
+                }
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null && item.DrawSlot == DrawSlot.BelowHead)
+                    {
+                        item.PreDraw(portraitBatch, continuousGameTime, player, 0.313f);
+                        item.PostDraw(portraitBatch, continuousGameTime, player, 0.313f);
+                    }
+                }
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null && item.DrawSlot == DrawSlot.AboveHead)
+                    {
+                        item.PreDraw(portraitBatch, continuousGameTime, player, 0.314f);
+                        item.PostDraw(portraitBatch, continuousGameTime, player, 0.314f);
+                    }
+                }
+
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null && item.DrawSlot == DrawSlot.Offhand)
+                    {
+                        item.PreDraw(portraitBatch, continuousGameTime, player, 0.315f);
+                        item.PostDraw(portraitBatch, continuousGameTime, player, 0.315f);
+                    }
+                }
+
+                player.Position = originalPosition;
+                player.CurrentScale = originalScale;
+                player.IsFacingLeft = originalFacingLeft;
+                typeof(Player).GetField("IsJumping", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalIsJumping);
+                typeof(Player).GetField("IsMoving", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalIsMoving);
+                typeof(Player).GetField("IsKnocked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalIsKnocked);
+                typeof(Player).GetField("IsImmune", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalIsImmune);
+                typeof(Player).GetField("jumpTime", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalJumpTime);
+
+                hurtFlashTimerField?.SetValue(player, originalHurtFlashTimer);
+                knockbackTimerField?.SetValue(player, originalKnockbackTimer);
+                knockbackRotationField?.SetValue(player, originalKnockbackRotation);
+                headRotationField?.SetValue(player, originalHeadRotation);
+                eyeRotationField?.SetValue(player, originalEyeRotation);
+                eyeTimerField?.SetValue(player, originalEyeTimer);
+                isEyeOpenField?.SetValue(player, originalIsEyeOpen);
+                eyeBlinkIntervalField?.SetValue(player, originalEyeBlinkInterval);
+                typeof(Player).GetField("IsAttacking", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, originalIsAttacking);
+                movementDirectionField?.SetValue(player, originalMovementDirection);
+                attackDirectionField?.SetValue(player, originalAttackDirection);
+
+                // Clear portrait rendering flag
+                Item.IsRenderingPortrait = false;
+
+                portraitBatch.End();
+            }
+
+            // Restore previous render target
+            if (prevRenderTargets != null && prevRenderTargets.Length > 0 && prevRenderTargets[0].RenderTarget != null)
+                graphicsDevice.SetRenderTarget(prevRenderTargets[0].RenderTarget as RenderTarget2D);
+            else
+                graphicsDevice.SetRenderTarget(null);
+        }
+
+        private void DrawNineSliceBox(SpriteBatch spriteBatch, Texture2D texture, Rectangle dest, int spriteSize, Color color, bool keepCenterClear = false)
+        {
+            // Draw all 9-slice regions as normal
+            Rectangle srcTopLeft = new Rectangle(0, 0, spriteSize, spriteSize);
+            Rectangle srcTop = new Rectangle(spriteSize, 0, 5, spriteSize);
+            Rectangle srcTopRight = new Rectangle(spriteSize + 5, 0, spriteSize, spriteSize);
+            Rectangle srcLeft = new Rectangle(0, spriteSize, spriteSize, 5);
+            Rectangle srcCenter = new Rectangle(spriteSize, spriteSize, 5, 5);
+            Rectangle srcRight = new Rectangle(spriteSize + 5, spriteSize, spriteSize, 5);
+            Rectangle srcBottomLeft = new Rectangle(0, spriteSize + 5, spriteSize, spriteSize);
+            Rectangle srcBottom = new Rectangle(spriteSize, spriteSize + 5, 5, spriteSize);
+            Rectangle srcBottomRight = new Rectangle(spriteSize + 5, spriteSize + 5, spriteSize, spriteSize);
+
+            int x = dest.X, y = dest.Y, w = dest.Width, h = dest.Height;
+            int s = spriteSize;
             // Corners
-            spriteBatch.Draw(texture, new Rectangle(x0, y0, corner, corner), srcTL, color); // TL
-            spriteBatch.Draw(texture, new Rectangle(x2, y0, corner, corner), srcTR, color); // TR
-            spriteBatch.Draw(texture, new Rectangle(x0, y2, corner, corner), srcBL, color); // BL
-            spriteBatch.Draw(texture, new Rectangle(x2, y2, corner, corner), srcBR, color); // BR
+            spriteBatch.Draw(texture, new Rectangle(x, y, s, s), srcTopLeft, color);
+            spriteBatch.Draw(texture, new Rectangle(x + w - s, y, s, s), srcTopRight, color);
+            spriteBatch.Draw(texture, new Rectangle(x, y + h - s, s, s), srcBottomLeft, color);
+            spriteBatch.Draw(texture, new Rectangle(x + w - s, y + h - s, s, s), srcBottomRight, color);
             // Edges
-            spriteBatch.Draw(texture, new Rectangle(x1, y0, x2 - x1, corner), srcTM, color); // Top
-            spriteBatch.Draw(texture, new Rectangle(x1, y2, x2 - x1, corner), srcBM, color); // Bottom
-            spriteBatch.Draw(texture, new Rectangle(x0, y1, corner, y2 - y1), srcML, color); // Left
-            spriteBatch.Draw(texture, new Rectangle(x2, y1, corner, y2 - y1), srcMR, color); // Right
+            spriteBatch.Draw(texture, new Rectangle(x + s, y, w - 2 * s, s), srcTop, color);
+            spriteBatch.Draw(texture, new Rectangle(x + s, y + h - s, w - 2 * s, s), srcBottom, color);
+            spriteBatch.Draw(texture, new Rectangle(x, y + s, s, h - 2 * s), srcLeft, color);
+            spriteBatch.Draw(texture, new Rectangle(x + w - s, y + s, s, h - 2 * s), srcRight, color);
             // Center
-            spriteBatch.Draw(texture, new Rectangle(x1, y1, x2 - x1, y2 - y1), srcMM, color);
+            Rectangle centerRect = new Rectangle(x + s, y + s, w - 2 * s, h - 2 * s);
+            if (!keepCenterClear)
+            {
+                spriteBatch.Draw(texture, centerRect, srcCenter, color);
+            }
+            else
+            {
+                int gapWidth = (int)(centerRect.Width * 0.4); // 40% of center width
+                int gapX = centerRect.X + (centerRect.Width - gapWidth) / 2;
+                int gapY = centerRect.Y + (int)(centerRect.Height * 0.2f); // 22% from top
+                int gapHeight = (int)(centerRect.Height * 0.56f); // 56% of center height
+
+                // Fill area above the gap
+                Rectangle aboveGapRect = new Rectangle(centerRect.X, centerRect.Y, centerRect.Width, gapY - centerRect.Y);
+                spriteBatch.Draw(texture, aboveGapRect, srcCenter, color);
+
+                // Fill area below the gap
+                Rectangle belowGapRect = new Rectangle(centerRect.X, gapY + gapHeight, centerRect.Width, centerRect.Bottom - (gapY + gapHeight));
+                spriteBatch.Draw(texture, belowGapRect, srcCenter, color);
+
+                // Fill left area
+                Rectangle leftRect = new Rectangle(centerRect.X, gapY, gapX - centerRect.X, gapHeight);
+                spriteBatch.Draw(texture, leftRect, srcCenter, color);
+
+                // Fill right area
+                int rightX = gapX + gapWidth;
+                Rectangle rightRect = new Rectangle(rightX, gapY, centerRect.Right - rightX, gapHeight);
+                spriteBatch.Draw(texture, rightRect, srcCenter, color);
+
+                // Middle vertical gap
+                Rectangle gapRect = new Rectangle(gapX, gapY, gapWidth, gapHeight);
+                if (statBoxOutlineTextureReversed != null && texture == statBoxTexture)
+                {
+                    DrawNineSliceBox(spriteBatch, statBoxOutlineTextureReversed, gapRect, spriteSize, Color.White, false);
+                }
+            }
         }
     }
 }

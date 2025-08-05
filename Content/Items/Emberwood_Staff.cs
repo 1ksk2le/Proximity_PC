@@ -90,8 +90,8 @@ namespace Proximity.Content.Items
         public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             base.PostDraw(spriteBatch, gameTime, player, drawLayer);
-            float pulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
-            float scalePulse = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.8f;
+            float pulse = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0.4f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.4f;
+            float scalePulse = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0.8f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.1f + 0.8f;
 
             Rectangle bloomRect = new Rectangle(
                 (int)((player.WeaponHitbox.X + (player.WeaponHitbox.Width / 2) - (int)(50 * scalePulse))),

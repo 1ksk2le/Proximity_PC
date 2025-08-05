@@ -21,7 +21,7 @@ namespace Proximity.Content.Items
             Name = "Makeshift Shotgun";
             Lore = "'It's a miracle that this thing is working'";
             Type = "[Weapon - Rifle]";
-            Info = "Shoots a range of bullets that will knock you back";
+            Info = "Shoots a range of pellets";
             Value = 1150;
             Damage = 8;
             UseTime = 1f;
@@ -52,7 +52,7 @@ namespace Proximity.Content.Items
                         0.5f,
                         Color.WhiteSmoke * 0.5f,
                         Color.DimGray,
-                        random.NextFloat(0.2f, 0.8f),
+                        random.NextFloat(0.2f, 0.8f) * player.CurrentScale,
                         random.NextFloat(2f, 4f),
                         (int)DrawLayer.AbovePlayer,
                         0,

@@ -52,7 +52,7 @@ namespace Proximity.Content.Items
                         0.5f,
                         Color.WhiteSmoke * 0.5f,
                         Color.DimGray,
-                        random.NextFloat(0.2f, 0.8f),
+                        random.NextFloat(0.2f, 0.8f) * player.CurrentScale,
                         random.NextFloat(2f, 4f),
                         (int)DrawLayer.AbovePlayer,
                         0,

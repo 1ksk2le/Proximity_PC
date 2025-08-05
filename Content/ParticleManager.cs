@@ -202,7 +202,8 @@ namespace Proximity.Content
 
         private ParticleVertex[] particles;
         private short[] quadIndices;
-        private int particleCount;
+        private int maxVertexCount = 0;
+        private int maxIndexCount = 0;
         private const int MaxParticles = 2000;
         private readonly Particle[] activeParticles = new Particle[MaxParticles];
         private int activeCount = 0;
@@ -264,9 +265,12 @@ namespace Proximity.Content
             }
 
             _particleEffect = content.Load<Effect>("Shaders/ParticleInstance");
-            particles = new ParticleVertex[particleCount * 4];
-            quadIndices = new short[particleCount * 6];
-            for (int i = 0; i < particleCount; i++)
+            // Allocate initial buffers for max particles
+            maxVertexCount = MaxParticles * 4;
+            maxIndexCount = MaxParticles * 6;
+            particles = new ParticleVertex[maxVertexCount];
+            quadIndices = new short[maxIndexCount];
+            for (int i = 0; i < MaxParticles; i++)
             {
                 int vi = i * 4;
                 int ii = i * 6;
@@ -445,8 +449,18 @@ namespace Proximity.Content
                 int quadCount = indices.Count;
                 if (quadCount == 0) continue;
 
-                particles = new ParticleVertex[quadCount * 4];
-                quadIndices = new short[quadCount * 6];
+                // Use preallocated arrays
+                int vertexCount = quadCount * 4;
+                int indexCount = quadCount * 6;
+                if (particles.Length < vertexCount)
+                {
+                    // Resize only if needed
+                    particles = new ParticleVertex[Math.Max(vertexCount, maxVertexCount)];
+                }
+                if (quadIndices.Length < indexCount)
+                {
+                    quadIndices = new short[Math.Max(indexCount, maxIndexCount)];
+                }
 
                 for (int j = 0; j < quadCount; j++)
                 {
@@ -516,10 +530,12 @@ namespace Proximity.Content
                     quadIndices[ii + 5] = (short)(vbase + 3);
                 }
 
-                int vertexCount = quadCount * 4;
-                int indexCount = quadCount * 6;
-
-                _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, ParticleVertex.VertexDecl, vertexCount, BufferUsage.WriteOnly);
+                // Reuse DynamicVertexBuffer if possible
+                if (_vertexBuffer == null || _vertexBuffer.VertexCount < vertexCount)
+                {
+                    _vertexBuffer?.Dispose();
+                    _vertexBuffer = new DynamicVertexBuffer(graphicsDevice, ParticleVertex.VertexDecl, Math.Max(vertexCount, maxVertexCount), BufferUsage.WriteOnly);
+                }
                 _vertexBuffer.SetData(particles, 0, vertexCount, SetDataOptions.Discard);
                 graphicsDevice.SetVertexBuffer(_vertexBuffer);
                 Matrix cameraMatrix = camera.TransformMatrix;

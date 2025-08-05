@@ -18,6 +18,9 @@ namespace Proximity.Content
     {
         private const string TEXTURE_PATH_FORMAT = "Textures/Items/t_Item_{0}";
 
+        public static bool FreezeGameWorldAnimations { get; set; } = false;
+        public static bool IsRenderingPortrait { get; set; } = false;
+
         private readonly ContentManager contentManager;
         public readonly ParticleManager particle;
         public readonly ProjectileProperties projectile;
@@ -104,6 +107,11 @@ namespace Proximity.Content
         {
         }
 
+        private bool IsPortraitRendering(GameTime gameTime)
+        {
+            return Math.Abs(gameTime.ElapsedGameTime.TotalMilliseconds - 16.67) < 1.0;
+        }
+
         public virtual void Use(float deltaTime, Player player, Vector2 direction)
         {
             if (player.IsKnocked) return;
@@ -135,6 +143,9 @@ namespace Proximity.Content
 
         public virtual void UpdateHitboxes(Player player, GameTime gameTime)
         {
+            if (FreezeGameWorldAnimations && !IsRenderingPortrait)
+                return;
+                
             if (Type.StartsWith("[Weapon"))
             {
                 var (hitbox, rotation) = CalculateWeaponHitbox(player, gameTime);
@@ -159,7 +170,7 @@ namespace Proximity.Content
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 Vector2 drawPosition = player.Position + new Vector2(0, jumpOffset);
 
-                float time = Main.Paused ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
+                float time = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
 
                 float sideOffset = (player.T_Body.Width / 2f + Texture.Width / 2) * (player.IsFacingLeft ? -1f : 1f);
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
@@ -210,6 +221,8 @@ namespace Proximity.Content
                         sideOffset + figure8X + orbitalX,
                         -walkBobOffset + figure8Y + orbitalY + (Texture.Height * 0.25f) - jumpRaise
                     );
+
+                    if (drawPosition == Vector2.Zero) return (Rectangle.Empty, 0f);
 
                     float staffWidth = Texture.Width * jumpScale;
                     float staffHeight = Texture.Height * jumpScale;
@@ -297,9 +310,10 @@ namespace Proximity.Content
                     float jumpAngle = player.IsFacingLeft ? MathHelper.ToRadians(-30) : MathHelper.ToRadians(30);
                     float targetAngle = player.IsJumping ? jumpAngle : idleAngle;
                     float lerpSpeed = 5f * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    currentSwordAngle = MathHelper.Lerp(currentSwordAngle, targetAngle, lerpSpeed);
+                    if ((!FreezeGameWorldAnimations && !Main.Paused) || IsRenderingPortrait)
+                        currentSwordAngle = MathHelper.Lerp(currentSwordAngle, targetAngle, lerpSpeed);
 
-                    float idleWave = Main.Paused ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f;
+                    float idleWave = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f;
                     float walkTilt = player.IsMoving ? (float)Math.Sin(player.WalkTimer * MathHelper.TwoPi * 2) * 0.7f : 0f;
                     float angle = currentSwordAngle + idleWave + walkTilt;
 
@@ -357,12 +371,13 @@ namespace Proximity.Content
                 }
                 else
                 {
-                    float breath = Main.Paused ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2f) * 0.20f;
+                    float breath = (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2f) * 0.20f;
                     float targetAngle = MathHelper.ToRadians(30);
                     if (player.IsMoving || player.IsJumping)
                         targetAngle = MathHelper.ToRadians(-60);
                     float lerpSpeed = 5f * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    currentGunAngle = MathHelper.Lerp(currentGunAngle, Main.Paused ? currentGunAngle : targetAngle, lerpSpeed);
+                    if ((!FreezeGameWorldAnimations && !Main.Paused) || IsRenderingPortrait)
+                        currentGunAngle = MathHelper.Lerp(currentGunAngle, targetAngle, lerpSpeed);
                     angle = player.IsFacingLeft ? -currentGunAngle + breath : currentGunAngle + breath;
                 }
 
@@ -481,7 +496,7 @@ namespace Proximity.Content
                 float lerpSpeed = 5f * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 currentSwordAngle = MathHelper.Lerp(currentSwordAngle, targetAngle, lerpSpeed);
 
-                float idleWave = Main.Paused ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f;
+                float idleWave = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2) * 0.2f;
                 float walkTilt = player.IsMoving ? (float)Math.Sin(player.WalkTimer * MathHelper.TwoPi * 2) * 0.7f : 0f;
                 float finalAngle = currentSwordAngle + idleWave + walkTilt;
 
@@ -545,7 +560,7 @@ namespace Proximity.Content
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 Vector2 drawPosition = pos + new Vector2(0, jumpOffset);
 
-                float time = Main.Paused ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
+                float time = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
 
                 float sideOffset = (player.T_Body.Width / 2f + Texture.Width / 2) * (player.IsFacingLeft ? -1f : 1f);
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
@@ -582,7 +597,7 @@ namespace Proximity.Content
                 float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
                 Vector2 drawPosition = pos + new Vector2(0, jumpOffset);
 
-                float time = Main.Paused ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
+                float time = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
 
                 float sideOffset = (player.T_Body.Width / 2f + Texture.Width / 2) * (player.IsFacingLeft ? -1f : 1f);
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
@@ -615,14 +630,14 @@ namespace Proximity.Content
         {
             if (!player.IsAttacking && !player.IsKnocked)
             {
-                float breath = Main.Paused ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2f) * 0.20f;
+                float breath = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)Math.Sin(gameTime.TotalGameTime.TotalSeconds * 2f) * 0.20f;
 
                 float targetAngle = MathHelper.ToRadians(30);
                 if (player.IsMoving || player.IsJumping)
                     targetAngle = MathHelper.ToRadians(-60);
 
                 float lerpSpeed = 5f * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                currentGunAngle = MathHelper.Lerp(currentGunAngle, Main.Paused ? currentGunAngle : targetAngle, lerpSpeed);
+                currentGunAngle = MathHelper.Lerp(currentGunAngle, ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? currentGunAngle : targetAngle, lerpSpeed);
 
                 float idleRotation = player.IsFacingLeft ? -currentGunAngle + breath : currentGunAngle + breath;
 

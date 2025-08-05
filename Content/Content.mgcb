@@ -596,6 +596,30 @@
 /processorParam:TextureFormat=Color
 /build:Textures/UI/t_Inventory_Box.png
 
+#begin Textures/UI/t_Inventory_Box_Outline.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/UI/t_Inventory_Box_Outline.png
+
+#begin Textures/UI/t_Inventory_Box_Outline_Reversed.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/UI/t_Inventory_Box_Outline_Reversed.png
+
 #begin Textures/UI/t_Inventory_Icons.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -607,18 +631,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/UI/t_Inventory_Icons.png
-
-#begin Textures/UI/t_Inventory_Star.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/UI/t_Inventory_Star.png
 
 #begin Textures/UI/t_Inventory_StarSmall.png
 /importer:TextureImporter

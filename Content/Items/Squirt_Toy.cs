@@ -19,9 +19,9 @@ namespace Proximity.Content.Items
             ID = 15;
             Rarity = 2;
             Name = "Squirt Toy";
-            Lore = "'It can be deadly when wielded by the one who lives in Polatli'";
+            Lore = "'Great at washing distant memories away'";
             Type = "[Weapon - Pistol]";
-            Info = "Shoots a bullet";
+            Info = "Sprays water jets that do little harm";
             Value = 2000;
             Damage = 2;
             UseTime = 0.1f;
@@ -52,7 +52,7 @@ namespace Proximity.Content.Items
                         0.5f,
                         Color.CornflowerBlue,
                         Color.CornflowerBlue * 0.3f,
-                        random.NextFloat(0.2f, 0.8f),
+                        random.NextFloat(0.2f, 0.8f) * player.CurrentScale,
                         random.NextFloat(4f, 8f),
                         (int)DrawLayer.BelowPlayer,
                         4,
