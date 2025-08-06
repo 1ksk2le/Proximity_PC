@@ -65,9 +65,15 @@ namespace Proximity.Content
         private const int StarSmallIconSize = 33;
         private const int StarSmallGap = 4;
         private const int IconBoxPadding = 55;
+        private const int bottomPadding = 40;
+        private const int itemIconPadding = 20;
 
         // Player portrait render target
         private RenderTarget2D playerPortraitRenderTarget;
+
+        private ParticleManager portraitParticleManager;
+        private ContentManager contentManager;
+        private bool portraitParticleManagerInitialized = false;
 
         private const int PortraitSize = 400;
 
@@ -79,6 +85,7 @@ namespace Proximity.Content
             slotTexture = content.Load<Texture2D>("Textures/UI/t_Inventory");
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
+            this.contentManager = content;
             slotWidth = SlotPixelSize;
             slotHeight = SlotPixelSize;
             scrollOffset = 0f;
@@ -86,6 +93,7 @@ namespace Proximity.Content
             isTouching = false;
             renderTargetWidth = slotWidth * Columns;
             renderTargetHeight = slotHeight * (VisibleRows + 2);
+            portraitParticleManager = new ParticleManager(content);
             try { thumbTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Thumb"); } catch { thumbTexture = slotTexture; }
             try { statBoxTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box"); } catch { statBoxTexture = null; }
             try { statBoxOutlineTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box_Outline"); } catch { statBoxOutlineTexture = null; }
@@ -127,6 +135,20 @@ namespace Proximity.Content
                     SurfaceFormat.Color,
                     DepthFormat.None
                 );
+            }
+
+            // Initialize portrait particle manager if not done yet
+            if (portraitParticleManager != null && !portraitParticleManagerInitialized)
+            {
+                try
+                {
+                    portraitParticleManager.LoadContent(graphicsDevice, contentManager);
+                    portraitParticleManagerInitialized = true;
+                }
+                catch
+                {
+                    // Content loading failed
+                }
             }
         }
 
@@ -358,7 +380,7 @@ namespace Proximity.Content
                     if (selected.Damage != 0) statDisplay.Add($"{selected.Damage} damage");
                     if (selected.Knockback != 0) statDisplay.Add($"{(selected.Knockback / 100f):.00} knockback");
                     if (selected.ShootSpeed != 0) statDisplay.Add($"{selected.ShootSpeed} range");
-                    if (selected.UseTime != 0) statDisplay.Add($"{(1f / selected.UseTime):0.00} uses per second");
+                    if (selected.UseTime != 0) statDisplay.Add($"{(1f / selected.UseTime).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} uses per second");
                     if (selected.Defense != 0) statDisplay.Add($"{selected.Defense} defense");
                     if (selected.KnockbackResistance != 0) statDisplay.Add($"{selected.KnockbackResistance * 100f}% knockback resistance");
                     if (selected.Value != 0) statDisplay.Add($"{selected.Value} gold");
@@ -466,7 +488,7 @@ namespace Proximity.Content
                     }
 
                     // 8. Fixed bottom padding for consistent spacing
-                    actualContentHeight += 40; // Fixed 25px bottom padding
+                    actualContentHeight += bottomPadding; // Fixed 25px bottom padding
 
                     // Debug output
                     bool isEquipped = slotIdx < 0;
@@ -613,7 +635,7 @@ namespace Proximity.Content
                             font.DrawString(spriteBatch, rarityText, new Vector2(rarityX, rarityY), rarityInfo.Color);
                             if (starTexture != null)
                             {
-                                int starCount = selected.Rarity + 1;
+                                int starCount = selected.Rarity;
                                 int totalStarsWidth = starCount * StarSmallIconSize + (starCount - 1) * StarSmallGap;
                                 int starsStartX = infoRegionX + (infoBoxWidth - totalStarsWidth) / 2;
                                 int starsY = rarityY + (int)raritySize.Y + 4; // 4px below rarity text
@@ -636,7 +658,7 @@ namespace Proximity.Content
                         int drawWidth = (int)(texW * scale);
                         int drawHeight = (int)(texH * scale);
                         int iconX = infoRegionX + (infoBoxWidth - drawWidth) / 2;
-                        int iconY = infoRegionY + (iconBoxHeight - drawHeight) / 2 + IconBoxPadding - 20; // Move item up by 15px
+                        int iconY = infoRegionY + (iconBoxHeight - drawHeight) / 2 + IconBoxPadding - itemIconPadding;
                         Vector2 origin = new Vector2(texW / 2f, texH / 2f);
                         Vector2 drawPos = new Vector2(iconX + drawWidth / 2f, iconY + drawHeight / 2f);
                         spriteBatch.Draw(selected.Texture, drawPos + new Vector2(0, 15), null, Color.Black * 0.35f, angle, origin, scale * 1.1f, SpriteEffects.None, 0f);
@@ -1362,6 +1384,44 @@ namespace Proximity.Content
                 movementDirectionField?.SetValue(player, Vector2.Zero);
                 attackDirectionField?.SetValue(player, Vector2.Zero);
 
+                // Update only portrait particles and items
+                float deltaTime = (float)continuousGameTime.ElapsedGameTime.TotalSeconds;
+                portraitParticleManager.Update(deltaTime);
+
+                // Temporarily replace player's particle manager with portrait one
+                var originalParticleManager = player.particle;
+                var particleField = typeof(Player).GetField("particle", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                particleField?.SetValue(player, portraitParticleManager);
+
+                foreach (var item in player.EquippedItems.Values)
+                {
+                    if (item != null)
+                    {
+                        // Temporarily replace item's particle manager
+                        var itemParticleField = typeof(Item).GetField("particle", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        var originalItemParticle = itemParticleField?.GetValue(item);
+                        itemParticleField?.SetValue(item, portraitParticleManager);
+
+                        item.UpdateParticles(deltaTime, continuousGameTime, player);
+
+                        // Restore original particle manager
+                        itemParticleField?.SetValue(item, originalItemParticle);
+                    }
+                }
+
+                // Restore original particle manager
+                particleField?.SetValue(player, originalParticleManager);
+
+                portraitBatch.End();
+
+                // Draw particles with identity camera (no transform)
+                var identityCamera = new Camera(Vector2.Zero, PortraitSize, PortraitSize);
+                identityCamera.Position = new Vector2(-80, -70); // Identity transform
+                portraitParticleManager.Draw(portraitBatch.GraphicsDevice, identityCamera, 2);
+                portraitParticleManager.Draw(portraitBatch.GraphicsDevice, identityCamera, 0);
+
+                portraitBatch.Begin();
+
                 player.DrawShadow(portraitBatch, 0.3f);
 
                 foreach (var item in player.EquippedItems.Values)
@@ -1417,6 +1477,12 @@ namespace Proximity.Content
                     }
                 }
 
+                portraitBatch.End();
+
+                portraitParticleManager.Draw(portraitBatch.GraphicsDevice, identityCamera, 1);
+
+                portraitBatch.Begin();
+
                 player.Position = originalPosition;
                 player.CurrentScale = originalScale;
                 player.IsFacingLeft = originalFacingLeft;
@@ -1461,39 +1527,46 @@ namespace Proximity.Content
                 graphicsDevice.SetRenderTarget(null);
         }
 
+        private static readonly Dictionary<string, EquipmentSlot> ItemTypeMap = new Dictionary<string, EquipmentSlot>
+        {
+            ["sword"] = EquipmentSlot.Weapon,
+            ["staff"] = EquipmentSlot.Weapon,
+            ["gun"] = EquipmentSlot.Weapon,
+            ["weapon"] = EquipmentSlot.Weapon,
+            ["helmet"] = EquipmentSlot.Helmet,
+            ["chestplate"] = EquipmentSlot.Chestplate,
+            ["offhand"] = EquipmentSlot.Offhand
+        };
+
         private EquipmentSlot? GetEquipmentSlotForItem(Item item)
         {
             if (item?.Type == null) return null;
-
             string type = item.Type.ToLower();
-            if (type.Contains("sword") || type.Contains("staff") || type.Contains("gun") || type.Contains("weapon"))
-                return EquipmentSlot.Weapon;
-            else if (type.Contains("helmet"))
-                return EquipmentSlot.Helmet;
-            else if (type.Contains("chestplate"))
-                return EquipmentSlot.Chestplate;
-            else if (type.Contains("offhand"))
-                return EquipmentSlot.Offhand;
-
-            return null;
+            return ItemTypeMap.FirstOrDefault(kvp => type.Contains(kvp.Key)).Value;
         }
+
+        private static readonly Dictionary<string, Func<Item, float>> StatExtractors = new Dictionary<string, Func<Item, float>>
+        {
+            ["damage"] = item => item.Damage,
+            ["defense"] = item => item.Defense,
+            ["knockback"] = item => item.Knockback,
+            ["range"] = item => item.ShootSpeed,
+            ["uses per second"] = item => item.UseTime > 0 ? 1f / item.UseTime : 0f,
+            ["knockback resistance"] = item => item.KnockbackResistance,
+            ["gold"] = item => item.Value
+        };
 
         private Color GetStatComparisonColor(string statText, Item item, Player player, int slotIdx)
         {
-            if (slotIdx < 0) return Color.White; // No comparison for equipped items
+            if (slotIdx < 0) return Color.White;
             var targetSlot = GetEquipmentSlotForItem(item);
             if (!targetSlot.HasValue || !player.EquippedItems.TryGetValue(targetSlot.Value, out var equipped) || equipped == null) return Color.White;
 
-            float itemStat = 0, equippedStat = 0;
-            if (statText.Contains("damage")) { itemStat = item.Damage; equippedStat = equipped.Damage; }
-            else if (statText.Contains("defense")) { itemStat = item.Defense; equippedStat = equipped.Defense; }
-            else if (statText.Contains("knockback") && !statText.Contains("resistance")) { itemStat = item.Knockback; equippedStat = equipped.Knockback; }
-            else if (statText.Contains("range")) { itemStat = item.ShootSpeed; equippedStat = equipped.ShootSpeed; }
-            else if (statText.Contains("uses per second")) { itemStat = 1f / item.UseTime; equippedStat = 1f / equipped.UseTime; }
-            else if (statText.Contains("knockback resistance")) { itemStat = item.KnockbackResistance; equippedStat = equipped.KnockbackResistance; }
-            else if (statText.Contains("gold")) { itemStat = item.Value; equippedStat = equipped.Value; }
-            else return Color.White;
+            var statKey = StatExtractors.Keys.FirstOrDefault(key => statText.Contains(key) && (key != "knockback" || !statText.Contains("resistance")));
+            if (statKey == null) return Color.White;
 
+            float itemStat = StatExtractors[statKey](item);
+            float equippedStat = StatExtractors[statKey](equipped);
             return itemStat > equippedStat ? Color.LightGreen : itemStat < equippedStat ? Color.LightCoral : Color.White;
         }
 

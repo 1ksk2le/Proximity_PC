@@ -26,9 +26,8 @@ namespace Proximity.Content.Items
             ShootSpeed = 900f;
         }
 
-        public override void Update(float deltaTime, GameTime gameTime, Player player)
+        public override void UpdateParticles(float deltaTime, GameTime gameTime, Player player)
         {
-            base.Update(deltaTime, gameTime, player);
             float weaponRotation = player.WeaponHitboxRotation - MathHelper.PiOver2;
             Vector2 velocityDir = new Vector2(
                 (float)Math.Cos(weaponRotation),
@@ -78,6 +77,11 @@ namespace Proximity.Content.Items
                     p.NoGravity = false;
                 }
             }
+        }
+
+        public override void Update(float deltaTime, GameTime gameTime, Player player)
+        {
+            base.Update(deltaTime, gameTime, player);
         }
 
         public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)

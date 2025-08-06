@@ -114,7 +114,13 @@ namespace Proximity.Content
 
         public virtual void Update(float deltaTime, GameTime gameTime, Player player)
         {
-            if (player == null || player.IsKnocked || player.WeaponHitbox == Rectangle.Empty)
+            if (player == null || player.IsKnocked || player.WeaponHitbox == Rectangle.Empty || FreezeGameWorldAnimations)
+                return;
+        }
+
+        public virtual void UpdateParticles(float deltaTime, GameTime gameTime, Player player)
+        {
+            if (player == null || player.IsKnocked || player.WeaponHitbox == Rectangle.Empty || FreezeGameWorldAnimations)
                 return;
         }
 

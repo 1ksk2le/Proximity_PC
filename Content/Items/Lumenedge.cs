@@ -38,7 +38,7 @@ namespace Proximity.Content.Items
             base.PostDraw(spriteBatch, gameTime, player, drawLayer);
         }
 
-        public override void Update(float deltaTime, GameTime gameTime, Player player)
+        public override void UpdateParticles(float deltaTime, GameTime gameTime, Player player)
         {
             base.Update(deltaTime, gameTime, player);
             float swordLength = player.WeaponHitbox.Height * 0.7f;

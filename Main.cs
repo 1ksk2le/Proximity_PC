@@ -76,7 +76,6 @@ namespace Proximity
         private Rectangle PauseButtonRectangle => new Rectangle(GraphicsDevice.Viewport.Width - 120, 20, 100, 100);
 
         private readonly Rectangle debugButtonRectangle = new Rectangle(20, 100, 100, 100);
-        private Dictionary<string, Rectangle> debugItemButtons = new Dictionary<string, Rectangle>();
 
         public Main()
         {
@@ -713,62 +712,6 @@ namespace Proximity
                 position.Y += lineHeight;
             }
             position.Y += lineHeight * 2;
-
-            foreach (var equipment in player.EquippedItems)
-            {
-                if (equipment.Value != null)
-                {
-                    float iconSize = lineHeight * 0.8f;
-                    Vector2 iconPosition = new Vector2(position.X - iconSize - 10, position.Y);
-                    spriteBatch.Draw(equipment.Value.Texture,
-                        new Rectangle((int)iconPosition.X, (int)iconPosition.Y, (int)iconSize, (int)iconSize),
-                        null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0f);
-
-                    Font.DrawString(
-                        spriteBatch,
-                        $"{equipment.Key}: {equipment.Value.Name}",
-                        position,
-                        textColor
-                    );
-
-                    position.Y += lineHeight;
-                    if (equipment.Value.ID != 0)
-                    {
-                        Font.DrawString(
-                            spriteBatch,
-                            $"  ID: {equipment.Value.ID}",
-                            position,
-                            textColor
-                        );
-
-                        position.Y += lineHeight;
-                    }
-                    if (!string.IsNullOrEmpty(equipment.Value.Prefix))
-                    {
-                        Font.DrawString(
-                            spriteBatch,
-                            $"  Prefix: {equipment.Value.Prefix}",
-                            position,
-                            textColor
-                        );
-
-                        position.Y += lineHeight;
-                    }
-                    if (!string.IsNullOrEmpty(equipment.Value.Suffix))
-                    {
-                        Font.DrawString(
-                            spriteBatch,
-                            $"  Suffix: {equipment.Value.Suffix}",
-                            position,
-                            textColor
-                        );
-
-                        position.Y += lineHeight;
-                    }
-
-                    position.Y += lineHeight;
-                }
-            }
         }
 
         private void DrawDebugButton()

@@ -55,7 +55,7 @@ namespace Proximity.Content
         private readonly Dictionary<EquipmentSlot, Item> Equipment = new();
         public readonly Texture2D T_Head, T_Body, T_Eye, T_Shadow;
         private readonly Joystick Joystick_Movement, Joystick_Attack;
-        private readonly ParticleManager particle;
+        public readonly ParticleManager particle;
         private readonly FloatingTextManager floatingText;
         private int currentHealth;
         public float jumpTime = JUMP_TIME_VALUE;
@@ -312,6 +312,7 @@ namespace Proximity.Content
                 if (item != null)
                 {
                     item.Update(deltaTime, gameTime, this);
+                    item.UpdateParticles(deltaTime, gameTime, this);
                 }
             }
         }

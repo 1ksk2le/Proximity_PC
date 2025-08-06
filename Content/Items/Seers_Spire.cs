@@ -47,6 +47,71 @@ namespace Proximity.Content.Items
             ShootSpeed = 400f;
         }
 
+        public override void UpdateParticles(float deltaTime, GameTime gameTime, Player player)
+        {
+            float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;
+
+            var (hitbox, rotation) = CalculateWeaponHitbox(player, gameTime);
+            if (hitbox == Rectangle.Empty) return;
+
+            Vector2 weaponCenter = hitbox.Center.ToVector2();
+            int particleCount = 8;
+            float ovalWidth = 30f;
+            float ovalHeight = 10f;
+            for (int i = 0; i < particleCount; i++)
+            {
+                float angle = MathHelper.TwoPi * (i / (float)particleCount) + time * 2f;
+                Vector2 localOffset = new Vector2((float)Math.Cos(angle) * ovalWidth, (float)Math.Sin(angle) * ovalHeight - 30f);
+                Vector2 rotatedOffset = Vector2.Transform(localOffset, Matrix.CreateRotationZ(0f));
+                Vector2 particlePos = weaponCenter + rotatedOffset;
+
+                int drawLayer = (Math.Sin(angle) > 0) ? 1 : 0;
+
+                Rectangle spawnRect = new Rectangle((int)particlePos.X, (int)particlePos.Y, 1, 1);
+                var p = particle.NewParticle(
+                    4,
+                    spawnRect,
+                    Vector2.Zero,
+                    0.1f,
+                    new Color(0, 226, 189, 110),
+                    new Color(149, 33, 77, 110),
+                    0.8f * player.CurrentScale,
+                    0.01f,
+                    drawLayer,
+                    0,
+                    player,
+                    true,
+                    0f
+                );
+            }
+            for (int i = 0; i < particleCount; i++)
+            {
+                float angle = MathHelper.TwoPi * (i / (float)particleCount) + time * 2f;
+                Vector2 localOffset = new Vector2((float)Math.Cos(angle) * ovalWidth * 2, (float)Math.Sin(angle) * ovalHeight - 30f);
+                Vector2 rotatedOffset = Vector2.Transform(localOffset, Matrix.CreateRotationZ(0f));
+                Vector2 particlePos = weaponCenter + rotatedOffset;
+
+                int drawLayer = (Math.Sin(angle) > 0) ? 1 : 0;
+
+                Rectangle spawnRect = new Rectangle((int)particlePos.X, (int)particlePos.Y, 1, 1);
+                var p = particle.NewParticle(
+                    4,
+                    spawnRect,
+                    Vector2.Zero,
+                    0.1f,
+                    new Color(0, 226, 189, 110),
+                    new Color(149, 33, 77, 110),
+                    0.4f * player.CurrentScale,
+                    0.1f,
+                    drawLayer,
+                    0,
+                    player,
+                    true,
+                    0f
+                );
+            }
+        }
+
         public override void Update(float deltaTime, GameTime gameTime, Player player)
         {
             base.Update(deltaTime, gameTime, player);
@@ -160,66 +225,6 @@ namespace Proximity.Content.Items
                     1f,
                     drawLayer,
                     1,
-                    player,
-                    true,
-                    0f
-                );
-            }
-
-            var (hitbox, rotation) = CalculateWeaponHitbox(player, gameTime);
-            if (hitbox == Rectangle.Empty) return;
-
-            Vector2 weaponCenter = hitbox.Center.ToVector2();
-            int particleCount = 8;
-            float ovalWidth = 30f;
-            float ovalHeight = 10f;
-            for (int i = 0; i < particleCount; i++)
-            {
-                float angle = MathHelper.TwoPi * (i / (float)particleCount) + time * 2f;
-                Vector2 localOffset = new Vector2((float)Math.Cos(angle) * ovalWidth, (float)Math.Sin(angle) * ovalHeight - 30f);
-                Vector2 rotatedOffset = Vector2.Transform(localOffset, Matrix.CreateRotationZ(0f));
-                Vector2 particlePos = weaponCenter + rotatedOffset;
-
-                int drawLayer = (Math.Sin(angle) > 0) ? 1 : 0;
-
-                Rectangle spawnRect = new Rectangle((int)particlePos.X, (int)particlePos.Y, 1, 1);
-                var p = particle.NewParticle(
-                    4,
-                    spawnRect,
-                    Vector2.Zero,
-                    0.1f,
-                    new Color(0, 226, 189, 110),
-                    new Color(149, 33, 77, 110),
-                    0.8f * player.CurrentScale,
-                    0.01f,
-                    drawLayer,
-                    0,
-                    player,
-                    true,
-                    0f
-                );
-            }
-            for (int i = 0; i < particleCount; i++)
-            {
-                float angle = MathHelper.TwoPi * (i / (float)particleCount) + time * 2f;
-                Vector2 localOffset = new Vector2((float)Math.Cos(angle) * ovalWidth * 2, (float)Math.Sin(angle) * ovalHeight - 30f);
-                Vector2 rotatedOffset = Vector2.Transform(localOffset, Matrix.CreateRotationZ(0f));
-                Vector2 particlePos = weaponCenter + rotatedOffset;
-
-                int drawLayer = (Math.Sin(angle) > 0) ? 1 : 0;
-
-                Rectangle spawnRect = new Rectangle((int)particlePos.X, (int)particlePos.Y, 1, 1);
-                var p = particle.NewParticle(
-                    4,
-                    spawnRect,
-                    Vector2.Zero,
-                    0.1f,
-                    new Color(0, 226, 189, 110),
-                    new Color(149, 33, 77, 110),
-                    0.4f * player.CurrentScale,
-                    0.1f,
-                    drawLayer,
-                    0,
                     player,
                     true,
                     0f
