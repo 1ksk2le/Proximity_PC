@@ -124,12 +124,6 @@ namespace Proximity.Content
 
             SkinColor = skinColor;
             currentHealth = MaxHealth;
-
-            EquipItem(11);
-            EquipItem(9);
-            EquipItem(4);
-            EquipItem(12);
-            EquipItem(6);
         }
 
         public void Jump()
@@ -179,8 +173,9 @@ namespace Proximity.Content
                 if (item.Type.Contains("[Helmet]"))
                     Equipment[EquipmentSlot.Helmet] = item;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Failed to equip item {itemId}: {ex.Message}");
             }
         }
 
@@ -362,17 +357,17 @@ namespace Proximity.Content
             if (mouseAttackDirection != Vector2.Zero)
                 finalAttackDirection = mouseAttackDirection;
 
-            if (finalAttackDirection != Vector2.Zero && !IsJumping && !IsKnocked)
+            if (finalAttackDirection != Vector2.Zero && !IsJumping && !IsKnocked && Equipment.TryGetValue(EquipmentSlot.Weapon, out var weapon) && weapon != null)
             {
                 IsFacingLeft = finalAttackDirection.X < 0;
 
                 if (!IsAttacking)
                 {
                     IsAttacking = true;
-                    attackTimer = Equipment[EquipmentSlot.Weapon].UseTime;
+                    attackTimer = weapon.UseTime;
                     attackDirection = finalAttackDirection;
                     MeleeAttackID = (MeleeAttackID + 1) % 1000;
-                    Equipment[EquipmentSlot.Weapon]?.Use(deltaTime, this, attackDirection);
+                    weapon.Use(deltaTime, this, attackDirection);
                 }
             }
 
@@ -381,9 +376,9 @@ namespace Proximity.Content
                 attackTimer -= deltaTime;
                 if (attackTimer <= 0f)
                 {
-                    if (finalAttackDirection != Vector2.Zero && !IsJumping && !IsKnocked)
+                    if (finalAttackDirection != Vector2.Zero && !IsJumping && !IsKnocked && Equipment.TryGetValue(EquipmentSlot.Weapon, out var currentWeapon) && currentWeapon != null)
                     {
-                        attackTimer = Equipment[EquipmentSlot.Weapon].UseTime;
+                        attackTimer = currentWeapon.UseTime;
                         attackDirection = finalAttackDirection;
                         MeleeAttackID = (MeleeAttackID + 1) % 1000;
                         foreach (var item in Equipment.Values)
@@ -422,7 +417,7 @@ namespace Proximity.Content
             }
         }
 
-        private void UpdateHitboxes(GameTime gameTime)
+        public void UpdateHitboxes(GameTime gameTime)
         {
             float playerHitboxWidth = T_Body.Width * BASE_SCALE;
             float playerHitboxHeight = T_Body.Height * BASE_SCALE;

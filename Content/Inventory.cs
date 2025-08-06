@@ -64,7 +64,7 @@ namespace Proximity.Content
         private Texture2D starTexture;
         private const int StarSmallIconSize = 33;
         private const int StarSmallGap = 4;
-        private const int IconBoxPadding = 40;
+        private const int IconBoxPadding = 55;
 
         // Player portrait render target
         private RenderTarget2D playerPortraitRenderTarget;
@@ -273,19 +273,19 @@ namespace Proximity.Content
                 }
                 else if (slotIdx == -100)
                 {
-                    selected = player.EquippedItems[EquipmentSlot.Weapon];
+                    player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out selected);
                 }
                 else if (slotIdx == -101)
                 {
-                    selected = player.EquippedItems[EquipmentSlot.Helmet];
+                    player.EquippedItems.TryGetValue(EquipmentSlot.Helmet, out selected);
                 }
                 else if (slotIdx == -102)
                 {
-                    selected = player.EquippedItems[EquipmentSlot.Offhand];
+                    player.EquippedItems.TryGetValue(EquipmentSlot.Offhand, out selected);
                 }
                 else if (slotIdx == -103)
                 {
-                    selected = player.EquippedItems[EquipmentSlot.Chestplate];
+                    player.EquippedItems.TryGetValue(EquipmentSlot.Chestplate, out selected);
                 }
                 if (selected != null)
                 {
@@ -296,7 +296,7 @@ namespace Proximity.Content
                     int infoRegionX = statBoxScrollbarX + statBoxScrollbarWidth;
                     int infoRegionY = (screenHeight - (slotHeight * VisibleRows)) / 2;
                     int infoRegionHeight = slotHeight * VisibleRows;
-                    int iconBoxPadding = 35;
+                    int iconBoxPadding = IconBoxPadding;
                     int iconBoxWidth = 0, iconBoxHeight = 0;
                     int iconDrawWidth = 0, iconDrawHeight = 0;
                     float iconScale = 0.8f;
@@ -405,51 +405,90 @@ namespace Proximity.Content
                     List<(List<string> name, List<string> effect, bool isPrefix)> affixLines = affixes.Select(a => (WrapText(a.name, infoBoxWidth - infoBoxPadding * 2), WrapText(a.effect, infoBoxWidth - infoBoxPadding * 2), a.isPrefix)).ToList();
                     List<string> debugLines = (Main.DebugMode && debugLine != null) ? WrapText(debugLine, infoBoxWidth - infoBoxPadding * 2) : new List<string>();
 
-                    // --- Measure total height ---
-                    int measureY = 0;
-                    foreach (var line in nameLines) measureY += (int)font.MeasureString(line).Y;
-                    if (nameLines.Count > 0) measureY += 2;
-                    // Rarity text is not rendered in the info box, so do not measure its height
-                    foreach (var line in typeLines) measureY += (int)font.MeasureString(line).Y;
-                    if (typeLines.Count > 0) measureY += 30;
-                    measureY += 30;
-                    foreach (var line in loreLines) measureY += (int)font.MeasureString(line).Y;
-                    if (loreLines.Count > 0) measureY += 30;
-                    foreach (var stat in statLines) foreach (var line in stat) measureY += (int)font.MeasureString(line).Y;
-                    // Add item.Info lines to measureY
-                    if (!string.IsNullOrEmpty(selected.Info))
-                    {
-                        var infoLines = WrapText(selected.Info, infoBoxWidth - infoBoxPadding * 2);
-                        foreach (var line in infoLines) measureY += (int)font.MeasureString(line).Y;
-                    }
-                    foreach (var affix in affixLines)
-                    {
-                        measureY += 30;
-                        foreach (var line in affix.name) measureY += (int)font.MeasureString(line).Y;
-                        foreach (var line in affix.effect) measureY += (int)font.MeasureString(line).Y;
-                    }
-                    foreach (var line in debugLines) measureY += (int)font.MeasureString(line).Y;
-                    measureY += IconBoxPadding;
                     // --- Icon box is fixed, info content is scrollable ---
                     // Dynamically set info box height based on screen size
-                    int totalInfoBoxHeight = Math.Min(infoRegionHeight, screenHeight - infoRegionY - 40); // 40px margin at bottom
+                    int totalInfoBoxHeight = Math.Min(infoRegionHeight, screenHeight - infoRegionY);
                     int infoContentBoxHeight = totalInfoBoxHeight - iconBoxHeight;
                     if (infoContentBoxHeight < 40) infoContentBoxHeight = 40;
-                    int infoBoxRenderTargetHeightFinal = measureY + infoBoxPadding * 2;
-                    // --- Add 20px gap after last text line ---
-                    int infoBoxRenderTargetHeightFinalWithGap = infoBoxRenderTargetHeightFinal;
-                    if (infoBoxRenderTarget == null || infoBoxRenderTarget.Width != infoBoxWidth || infoBoxRenderTarget.Height != infoBoxRenderTargetHeightFinalWithGap)
+
+                    // Calculate actual content height by simulating the rendering
+                    int actualContentHeight = infoBoxPadding; // Top padding
+
+                    // 1. 10px gap then item name
+                    actualContentHeight += 10;
+                    foreach (var nameLine in nameLines)
+                        actualContentHeight += (int)font.MeasureString(nameLine).Y;
+
+                    // 2. 10px gap then item type
+                    actualContentHeight += 10;
+                    foreach (var typeLine in typeLines)
+                        actualContentHeight += (int)font.MeasureString(typeLine).Y;
+
+                    // 3. 30px gap then lore
+                    actualContentHeight += 30;
+                    foreach (var loreLine in loreLines)
+                        actualContentHeight += (int)font.MeasureString(loreLine).Y;
+
+                    // 4. 30px gap then stats (10px between each stat)
+                    actualContentHeight += 30;
+                    for (int i = 0; i < statLines.Count; i++)
+                    {
+                        if (i > 0) actualContentHeight += 10; // 10px between stats
+                        foreach (var statLine in statLines[i])
+                            actualContentHeight += (int)font.MeasureString(statLine).Y;
+                    }
+
+                    // Item info (separate stat with 10px gap)
+                    if (!string.IsNullOrEmpty(selected.Info))
+                    {
+                        actualContentHeight += 10; // 10px gap before item info
+                        var infoLines = WrapText(selected.Info, infoBoxWidth - infoBoxPadding * 2);
+                        foreach (var infoLine in infoLines)
+                            actualContentHeight += (int)font.MeasureString(infoLine).Y;
+                    }
+
+                    // 5 & 6. 10px gap for each prefix/suffix
+                    foreach (var affix in affixLines)
+                    {
+                        actualContentHeight += 10; // 10px gap
+                        string affixLabel = affix.isPrefix ? "[Prefix Bonus]" : "[Suffix Bonus]";
+                        actualContentHeight += (int)font.MeasureString(affixLabel).Y;
+                        foreach (var line in affix.effect)
+                            actualContentHeight += (int)font.MeasureString(line).Y;
+                    }
+
+                    // 7. 10px gap then debug info
+                    if (debugLines.Count > 0)
+                    {
+                        actualContentHeight += 10;
+                        foreach (var dbgLine in debugLines)
+                            actualContentHeight += (int)font.MeasureString(dbgLine).Y;
+                    }
+
+                    // 8. Fixed bottom padding for consistent spacing
+                    actualContentHeight += 40; // Fixed 25px bottom padding
+
+                    // Debug output
+                    bool isEquipped = slotIdx < 0;
+                    //System.Diagnostics.Debug.WriteLine($"Item: {selected.GetName()}, IsEquipped: {isEquipped}, ContentHeight: {actualContentHeight}, VisibleHeight: {visibleHeight}");
+
+                    // Now create the properly sized render target
+                    if (infoBoxRenderTarget == null || infoBoxRenderTarget.Width != infoBoxWidth || infoBoxRenderTarget.Height != actualContentHeight)
                     {
                         infoBoxRenderTarget?.Dispose();
-                        infoBoxRenderTarget = new RenderTarget2D(spriteBatch.GraphicsDevice, infoBoxWidth, infoBoxRenderTargetHeightFinalWithGap);
+                        infoBoxRenderTarget = new RenderTarget2D(spriteBatch.GraphicsDevice, infoBoxWidth, actualContentHeight);
                     }
+
+                    // Render the actual content
                     spriteBatch.GraphicsDevice.SetRenderTarget(infoBoxRenderTarget);
                     spriteBatch.GraphicsDevice.Clear(Color.Transparent);
                     using (SpriteBatch infoBatch = new SpriteBatch(spriteBatch.GraphicsDevice))
                     {
                         infoBatch.Begin();
                         int infoY = infoBoxPadding;
-                        // Name (centered)
+
+                        // 1. 10px gap then item name (centered)
+                        infoY += 10;
                         foreach (var nameLine in nameLines)
                         {
                             Vector2 nameSize = font.MeasureString(nameLine);
@@ -457,8 +496,9 @@ namespace Proximity.Content
                             font.DrawString(infoBatch, nameLine, new Vector2(nameX, infoY), rarityInfo.Color);
                             infoY += (int)nameSize.Y;
                         }
-                        if (nameLines.Count > 0) infoY += 2;
-                        // Type (centered)
+
+                        // 2. 10px gap then item type (centered)
+                        infoY += 10;
                         foreach (var typeLine in typeLines)
                         {
                             Vector2 typeSize = font.MeasureString(typeLine);
@@ -466,9 +506,9 @@ namespace Proximity.Content
                             font.DrawString(infoBatch, typeLine, new Vector2(typeX, infoY), Color.Yellow);
                             infoY += (int)typeSize.Y;
                         }
-                        if (typeLines.Count > 0) infoY += 10;
-                        infoY += 10;
-                        // Lore (centered)
+
+                        // 3. 30px gap then lore (centered)
+                        infoY += 30;
                         foreach (var loreLine in loreLines)
                         {
                             Vector2 loreSize = font.MeasureString(loreLine);
@@ -476,10 +516,13 @@ namespace Proximity.Content
                             font.DrawString(infoBatch, loreLine, new Vector2(loreX, infoY), Color.MediumAquamarine);
                             infoY += (int)loreSize.Y;
                         }
-                        if (loreLines.Count > 0) infoY += 30;
-                        // Stats (left-aligned, with icons)
+
+                        // 4. 30px gap then stats (10px between each stat)
+                        infoY += 30;
                         for (int i = 0; i < statLines.Count; i++)
                         {
+                            if (i > 0) infoY += 10; // 10px between stats
+
                             int iconIndex = -1;
                             string statRaw = statDisplay.Count > i ? statDisplay[i] : "";
                             if (statRaw.Contains("damage")) iconIndex = 0;
@@ -489,6 +532,7 @@ namespace Proximity.Content
                             else if (statRaw.Contains("defense")) iconIndex = 4;
                             else if (statRaw.Contains("knockback resistance")) iconIndex = 5;
                             else if (statRaw.Contains("gold")) iconIndex = 6;
+
                             foreach (var statLine in statLines[i])
                             {
                                 if (statIconsTexture != null && iconIndex >= 0)
@@ -498,16 +542,18 @@ namespace Proximity.Content
                                     infoBatch.Draw(statIconsTexture, iconPos, statIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
                                 }
                                 float textOffsetX = statIconsTexture != null && iconIndex >= 0 ? StatIconSize + 8 : 0;
-                                font.DrawString(infoBatch, statLine, new Vector2(infoBoxPadding + textOffsetX, infoY), Color.White);
+                                Color statColor = GetStatComparisonColor(statRaw, selected, player, slotIdx);
+                                font.DrawString(infoBatch, statLine, new Vector2(infoBoxPadding + textOffsetX, infoY + 5), statColor);
                                 infoY += (int)font.MeasureString(statLine).Y;
                             }
                         }
-                        // Info text (left-aligned, CornflowerBlue)
-                        // Info text (left-aligned, with icon, color: White)
+
+                        // Item info (separate stat with 10px gap)
                         if (!string.IsNullOrEmpty(selected.Info))
                         {
+                            infoY += 10; // 10px gap before item info
                             var infoLines = WrapText(selected.Info, infoBoxWidth - infoBoxPadding * 2);
-                            int infoIconIndex = 7; // Last frame in statIconsTexture for item.Info
+                            int infoIconIndex = 7;
                             for (int i = 0; i < infoLines.Count; i++)
                             {
                                 float textOffsetX = 0;
@@ -518,14 +564,14 @@ namespace Proximity.Content
                                     infoBatch.Draw(statIconsTexture, iconPos, infoIconSrcRect, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
                                     textOffsetX = StatIconSize + 8;
                                 }
-                                font.DrawString(infoBatch, infoLines[i], new Vector2(infoBoxPadding + textOffsetX, infoY), Color.White);
+                                font.DrawString(infoBatch, infoLines[i], new Vector2(infoBoxPadding + textOffsetX, infoY + 5), Color.White);
                                 infoY += (int)font.MeasureString(infoLines[i]).Y;
                             }
                         }
-                        // Prefix/suffix (left-aligned)
+                        // Prefix/suffix with 10px gaps
                         foreach (var affix in affixLines)
                         {
-                            infoY += 30;
+                            infoY += 10;
                             string affixLabel = affix.isPrefix ? "[Prefix Bonus]" : "[Suffix Bonus]";
                             font.DrawString(infoBatch, affixLabel, new Vector2(infoBoxPadding, infoY), Color.Yellow);
                             infoY += (int)font.MeasureString(affixLabel).Y;
@@ -535,12 +581,20 @@ namespace Proximity.Content
                                 infoY += (int)font.MeasureString(line).Y;
                             }
                         }
-                        // Debug info (left-aligned)
-                        foreach (var dbgLine in debugLines)
+
+                        // 7. 10px gap then debug info
+                        if (debugLines.Count > 0)
                         {
-                            font.DrawString(infoBatch, dbgLine, new Vector2(infoBoxPadding, infoY), Color.Red);
-                            infoY += (int)font.MeasureString(dbgLine).Y;
+                            infoY += 10;
+                            foreach (var dbgLine in debugLines)
+                            {
+                                font.DrawString(infoBatch, dbgLine, new Vector2(infoBoxPadding, infoY), Color.Red);
+                                infoY += (int)font.MeasureString(dbgLine).Y;
+                            }
                         }
+
+                        // 8. Consistent bottom spacing
+                        // (Bottom padding handled in height calculation)
                         infoBatch.End();
                     }
                     spriteBatch.GraphicsDevice.SetRenderTarget(null);
@@ -549,6 +603,7 @@ namespace Proximity.Content
                     {
                         // Make icon box width match info box width
                         DrawNineSliceBox(spriteBatch, statBoxTexture, new Rectangle(infoRegionX, infoRegionY, infoBoxWidth, iconBoxHeight + IconBoxPadding), StatBoxSpriteSize, rarityInfo.Color);
+
                         // Draw rarity text 10px below the icon box top, centered
                         if (!string.IsNullOrEmpty(rarityText))
                         {
@@ -581,12 +636,11 @@ namespace Proximity.Content
                         int drawWidth = (int)(texW * scale);
                         int drawHeight = (int)(texH * scale);
                         int iconX = infoRegionX + (infoBoxWidth - drawWidth) / 2;
-                        int iconY = infoRegionY + (iconBoxHeight - drawHeight) / 2 + IconBoxPadding; // Move item down by 20px
+                        int iconY = infoRegionY + (iconBoxHeight - drawHeight) / 2 + IconBoxPadding - 20; // Move item up by 15px
                         Vector2 origin = new Vector2(texW / 2f, texH / 2f);
                         Vector2 drawPos = new Vector2(iconX + drawWidth / 2f, iconY + drawHeight / 2f);
                         spriteBatch.Draw(selected.Texture, drawPos + new Vector2(0, 15), null, Color.Black * 0.35f, angle, origin, scale * 1.1f, SpriteEffects.None, 0f);
                         spriteBatch.Draw(selected.Texture, drawPos, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
-                        iconBoxHeight += IconBoxPadding;
                     }
                     // --- Draw info content (scrollable) ---
                     // Clamp info box X so it never exceeds screen borders
@@ -595,24 +649,28 @@ namespace Proximity.Content
                     int infoContentY = infoRegionY + iconBoxHeight;
                     // Cap info content box height to fit on screen (Y axis untouched)
                     int cappedInfoContentBoxHeight = infoContentBoxHeight;
-                    Rectangle infoContentDestRect = new Rectangle(infoContentX, infoContentY, infoBoxWidth, cappedInfoContentBoxHeight - IconBoxPadding);
-                    Rectangle infoContentSrcRect = new Rectangle(0, (int)infoBoxScrollOffset, infoBoxWidth, cappedInfoContentBoxHeight - IconBoxPadding);
+                    int visibleHeight = cappedInfoContentBoxHeight;
+                    int actualScrollableHeight = visibleHeight - IconBoxPadding;
+
+                    Rectangle infoContentDestRect = new Rectangle(infoContentX, infoContentY, infoBoxWidth, visibleHeight);
+                    Rectangle infoContentSrcRect = new Rectangle(0, (int)infoBoxScrollOffset, infoBoxWidth, visibleHeight);
                     if (statBoxTexture != null)
                     {
                         DrawNineSliceBox(spriteBatch, statBoxTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
                     }
                     spriteBatch.Draw(infoBoxRenderTarget, infoContentDestRect, infoContentSrcRect, Color.White);
                     // --- Draw scrollbar for info content if needed ---
-                    if (infoBoxRenderTarget.Height > infoContentBoxHeight)
+                    if (infoBoxRenderTarget.Height > actualScrollableHeight)
                     {
                         int infoScrollbarWidth = 15;
                         int infoScrollbarX = infoContentDestRect.Right;
                         int infoScrollbarY = infoContentDestRect.Y;
                         int infoScrollbarHeight = infoContentDestRect.Height;
-                        float infoVisibleRatio = (float)infoContentBoxHeight / infoBoxRenderTarget.Height;
+                        float infoVisibleRatio = (float)visibleHeight / infoBoxRenderTarget.Height;
                         float infoThumbHeight = infoScrollbarHeight * infoVisibleRatio;
-                        float infoMaxScroll = infoBoxRenderTarget.Height - infoContentBoxHeight;
-                        float infoThumbY = infoScrollbarY + (infoBoxScrollOffset / (infoMaxScroll > 0 ? infoMaxScroll : 1)) * (infoScrollbarHeight - infoThumbHeight);
+                        float infoMaxScroll = Math.Max(0, infoBoxRenderTarget.Height - infoScrollbarHeight);
+                        if (infoMaxScroll < 1) infoMaxScroll = 1;
+                        float infoThumbY = infoScrollbarY + (infoBoxScrollOffset / infoMaxScroll) * (infoScrollbarHeight - infoThumbHeight);
                         Rectangle infoThumbRect = new Rectangle(infoScrollbarX, (int)infoThumbY, infoScrollbarWidth, (int)infoThumbHeight);
                         // Draw scrollbar background
                         spriteBatch.Draw(Main.Pixel, new Rectangle(infoScrollbarX, infoScrollbarY, infoScrollbarWidth, infoScrollbarHeight), Color.Black * 0.45f);
@@ -648,6 +706,58 @@ namespace Proximity.Content
                     }
 
                     DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
+
+                    // Draw equip/unequip button above info box
+                    bool isEquippedItem = slotIdx < 0;
+                    string buttonText = "Equip";
+                    Color textColor = Color.White;
+
+                    if (isEquippedItem)
+                    {
+                        // Check if inventory is full
+                        bool inventoryFull = true;
+                        for (int i = 0; i < items.Count; i++)
+                        {
+                            if (items[i] == null)
+                            {
+                                inventoryFull = false;
+                                break;
+                            }
+                        }
+
+                        if (inventoryFull)
+                        {
+                            buttonText = "No Space!";
+                            textColor = Color.Red;
+                        }
+                        else
+                        {
+                            buttonText = "Unequip";
+                        }
+                    }
+
+                    int buttonWidth = 190;
+                    int buttonHeight = 50;
+                    int buttonX = infoContentX;
+                    int buttonY = infoRegionY - buttonHeight;
+                    Rectangle buttonRect = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                    // Button background (gray)
+                    spriteBatch.Draw(Main.Pixel, buttonRect, Color.Gray);
+
+                    // Button borders
+                    spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, buttonWidth, 2), Color.White); // Top
+                    spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, 2, buttonHeight), Color.White); // Left
+                    spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY + buttonHeight - 2, buttonWidth, 2), Color.Black); // Bottom
+                    spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX + buttonWidth - 2, buttonY, 2, buttonHeight), Color.Black); // Right
+
+                    // Button text
+                    Vector2 textSize = font.MeasureString(buttonText);
+                    Vector2 textPos = new Vector2(
+                        buttonX + (buttonWidth - textSize.X) / 2,
+                        buttonY + (buttonHeight - textSize.Y) / 2
+                    );
+                    font.DrawString(spriteBatch, buttonText, textPos, textColor);
                 }
             }
             int equipmentBoxWidth = 570;
@@ -686,13 +796,13 @@ namespace Proximity.Content
                         Item equipped = null;
                         if (col == 0)
                         {
-                            if (i == 0 && player.EquippedItems[EquipmentSlot.Weapon] != null) equipped = player.EquippedItems[EquipmentSlot.Weapon];
-                            else if (i == 1 && player.EquippedItems[EquipmentSlot.Helmet] != null) equipped = player.EquippedItems[EquipmentSlot.Helmet];
+                            if (i == 0) player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out equipped);
+                            else if (i == 1) player.EquippedItems.TryGetValue(EquipmentSlot.Helmet, out equipped);
                         }
                         else
                         {
-                            if (i == 0 && player.EquippedItems[EquipmentSlot.Offhand] != null) equipped = player.EquippedItems[EquipmentSlot.Offhand];
-                            else if (i == 1 && player.EquippedItems[EquipmentSlot.Chestplate] != null) equipped = player.EquippedItems[EquipmentSlot.Chestplate];
+                            if (i == 0) player.EquippedItems.TryGetValue(EquipmentSlot.Offhand, out equipped);
+                            else if (i == 1) player.EquippedItems.TryGetValue(EquipmentSlot.Chestplate, out equipped);
                         }
                         int rarity = equipped != null ? equipped.Rarity : 0;
                         if (rarity < 0 || rarity > 6) rarity = 0;
@@ -761,7 +871,27 @@ namespace Proximity.Content
                 if (selectedItemSlot.HasValue)
                 {
                     int slotIdx = selectedItemSlot.Value;
-                    Item selected = slotIdx >= 0 && slotIdx < items.Count ? items[slotIdx] : null;
+                    Item selected = null;
+                    if (slotIdx >= 0 && slotIdx < items.Count)
+                    {
+                        selected = items[slotIdx];
+                    }
+                    else if (slotIdx == -100)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out selected);
+                    }
+                    else if (slotIdx == -101)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Helmet, out selected);
+                    }
+                    else if (slotIdx == -102)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Offhand, out selected);
+                    }
+                    else if (slotIdx == -103)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Chestplate, out selected);
+                    }
                     if (selected != null && selected.Texture != null)
                     {
                         float iconScale = 0.8f;
@@ -785,7 +915,7 @@ namespace Proximity.Content
                 {
                     int scrollAmount = mouseWheelDelta / 120; // 120 units per notch
                     infoBoxScrollOffset -= scrollAmount * 30; // 30px per notch
-                    float maxScroll = Math.Max(0, infoBoxRenderTarget != null ? infoBoxRenderTarget.Height - infoContentBoxHeight : 0);
+                    float maxScroll = Math.Max(0, infoBoxRenderTarget != null ? infoBoxRenderTarget.Height - (infoContentBoxHeight - IconBoxPadding) : 0);
                     if (infoBoxScrollOffset > maxScroll) infoBoxScrollOffset = maxScroll;
                     if (infoBoxScrollOffset < 0) infoBoxScrollOffset = 0;
                 }
@@ -802,7 +932,27 @@ namespace Proximity.Content
                 if (selectedItemSlot.HasValue)
                 {
                     int slotIdx = selectedItemSlot.Value;
-                    Item selected = slotIdx >= 0 && slotIdx < items.Count ? items[slotIdx] : null;
+                    Item selected = null;
+                    if (slotIdx >= 0 && slotIdx < items.Count)
+                    {
+                        selected = items[slotIdx];
+                    }
+                    else if (slotIdx == -100)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out selected);
+                    }
+                    else if (slotIdx == -101)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Helmet, out selected);
+                    }
+                    else if (slotIdx == -102)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Offhand, out selected);
+                    }
+                    else if (slotIdx == -103)
+                    {
+                        player.EquippedItems.TryGetValue(EquipmentSlot.Chestplate, out selected);
+                    }
                     if (selected != null && selected.Texture != null)
                     {
                         float iconScale = 0.8f;
@@ -819,6 +969,93 @@ namespace Proximity.Content
                 Vector2 inputPos = touches.Count > 0 ? touch.Position : new Vector2(mousePoint.X, mousePoint.Y);
                 if (isPressed)
                 {
+                    var equipmentField = typeof(Player).GetField("Equipment", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var equipment = (Dictionary<EquipmentSlot, Item>)equipmentField.GetValue(player);
+                    if (selectedItemSlot.HasValue)
+                    {
+                        int slotIdx = selectedItemSlot.Value;
+                        Item selected = null;
+                        if (slotIdx >= 0 && slotIdx < items.Count)
+                        {
+                            selected = items[slotIdx];
+                        }
+                        else if (slotIdx < 0)
+                        {
+                            // Get equipped item for button display
+                            if (slotIdx == -100) equipment.TryGetValue(EquipmentSlot.Weapon, out selected);
+                            else if (slotIdx == -101) equipment.TryGetValue(EquipmentSlot.Helmet, out selected);
+                            else if (slotIdx == -102) equipment.TryGetValue(EquipmentSlot.Offhand, out selected);
+                            else if (slotIdx == -103) equipment.TryGetValue(EquipmentSlot.Chestplate, out selected);
+                        }
+
+                        if (selected != null || slotIdx < 0)
+                        {
+                            int buttonWidth = 190;
+                            int buttonHeight = 50;
+                            int marginX = 40;
+                            int infoBoxW = infoBoxRenderTarget != null ? infoBoxRenderTarget.Width : 0;
+                            int infoBoxScreenX = Math.Max(marginX, Math.Min(screenWidth - infoBoxW - marginX, infoRegionX));
+                            int buttonX = infoBoxScreenX;
+                            int buttonY = infoRegionY - buttonHeight;
+                            Rectangle buttonRect = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                            if (buttonRect.Contains(inputPos))
+                            {
+                                if (slotIdx < 0) // Unequip equipped item
+                                {
+                                    // Check if inventory has space first
+                                    bool hasSpace = false;
+                                    for (int i = 0; i < items.Count; i++)
+                                    {
+                                        if (items[i] == null)
+                                        {
+                                            hasSpace = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!hasSpace) return; // Don't unequip if no space
+
+                                    // Get the equipped item directly
+                                    Item equippedItem = null;
+                                    EquipmentSlot slot = EquipmentSlot.Weapon;
+
+                                    if (slotIdx == -100) { equipment.TryGetValue(EquipmentSlot.Weapon, out equippedItem); slot = EquipmentSlot.Weapon; }
+                                    else if (slotIdx == -101) { equipment.TryGetValue(EquipmentSlot.Helmet, out equippedItem); slot = EquipmentSlot.Helmet; }
+                                    else if (slotIdx == -102) { equipment.TryGetValue(EquipmentSlot.Offhand, out equippedItem); slot = EquipmentSlot.Offhand; }
+                                    else if (slotIdx == -103) { equipment.TryGetValue(EquipmentSlot.Chestplate, out equippedItem); slot = EquipmentSlot.Chestplate; }
+
+                                    if (equippedItem != null)
+                                    {
+                                        // Find empty inventory slot
+                                        for (int i = 0; i < items.Count; i++)
+                                        {
+                                            if (items[i] == null)
+                                            {
+                                                items[i] = equippedItem;
+                                                equipment[slot] = null;
+                                                selectedItemSlot = null;
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                                else // Equip inventory item
+                                {
+                                    EquipmentSlot? targetSlot = GetEquipmentSlotForItem(selected);
+                                    if (targetSlot.HasValue)
+                                    {
+                                        player.EquippedItems.TryGetValue(targetSlot.Value, out Item currentlyEquipped);
+                                        equipment[targetSlot.Value] = selected;
+                                        items[slotIdx] = currentlyEquipped;
+                                        selectedItemSlot = null;
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
+
                     if (selectedItemSlot.HasValue && infoContentRect.Contains(inputPos))
                     {
                         infoBoxIsTouching = true;
@@ -850,9 +1087,9 @@ namespace Proximity.Content
                             if (eqSlotRect.Contains((int)inputPos.X, (int)inputPos.Y))
                             {
                                 // Weapon (i==0), Helmet (i==1)
-                                if (i == 0 && player.EquippedItems[EquipmentSlot.Weapon] != null)
+                                if (i == 0 && player.EquippedItems.TryGetValue(EquipmentSlot.Weapon, out var weaponItem) && weaponItem != null)
                                     selectedItemSlot = -100;
-                                else if (i == 1 && player.EquippedItems[EquipmentSlot.Helmet] != null)
+                                else if (i == 1 && player.EquippedItems.TryGetValue(EquipmentSlot.Helmet, out var helmetItem) && helmetItem != null)
                                     selectedItemSlot = -101;
                                 else
                                     selectedItemSlot = null;
@@ -871,9 +1108,9 @@ namespace Proximity.Content
                                 if (eqSlotRect.Contains((int)inputPos.X, (int)inputPos.Y))
                                 {
                                     // Offhand (i==0), Chestplate (i==1)
-                                    if (i == 0 && player.EquippedItems[EquipmentSlot.Offhand] != null)
+                                    if (i == 0 && player.EquippedItems.TryGetValue(EquipmentSlot.Offhand, out var offhandItem) && offhandItem != null)
                                         selectedItemSlot = -102;
-                                    else if (i == 1 && player.EquippedItems[EquipmentSlot.Chestplate] != null)
+                                    else if (i == 1 && player.EquippedItems.TryGetValue(EquipmentSlot.Chestplate, out var chestItem) && chestItem != null)
                                         selectedItemSlot = -103;
                                     else
                                         selectedItemSlot = null;
@@ -917,7 +1154,7 @@ namespace Proximity.Content
                     {
                         float deltaY = touch.Position.Y - infoBoxLastTouchY;
                         infoBoxScrollOffset -= deltaY;
-                        float maxScroll = Math.Max(0, infoBoxRenderTarget != null ? infoBoxRenderTarget.Height - infoContentBoxHeight : 0);
+                        float maxScroll = Math.Max(0, infoBoxRenderTarget != null ? infoBoxRenderTarget.Height - (infoContentBoxHeight - IconBoxPadding) : 0);
                         if (infoBoxScrollOffset > maxScroll) infoBoxScrollOffset = maxScroll;
                         if (infoBoxScrollOffset < 0) infoBoxScrollOffset = 0;
                         infoBoxLastTouchY = touch.Position.Y;
@@ -946,6 +1183,9 @@ namespace Proximity.Content
             {
                 infoBoxScrollOffset = 0f;
                 lastSelectedItemSlot = selectedItemSlot ?? -1;
+                // Dispose old render target to force recalculation of content bounds
+                infoBoxRenderTarget?.Dispose();
+                infoBoxRenderTarget = null;
             }
         }
 
@@ -1040,6 +1280,17 @@ namespace Proximity.Content
                 // Set portrait rendering flag
                 Item.IsRenderingPortrait = true;
 
+                // Temporarily disable animation freeze for portrait effects
+                bool originalFreezeState = Item.FreezeGameWorldAnimations;
+                Item.FreezeGameWorldAnimations = false;
+
+                // Store original hitboxes to prevent teleportation
+                Rectangle originalHitbox = player.Hitbox;
+                Rectangle originalWeaponHitbox = player.WeaponHitbox;
+                Rectangle originalOffhandHitbox = player.OffhandHitbox;
+                Rectangle originalPlayerSpriteHitbox = player.PlayerSpriteHitbox;
+                float originalWeaponRotation = player.WeaponHitboxRotation;
+
                 // Create continuous GameTime for item animations
                 TimeSpan totalTime = DateTime.Now - portraitStartTime;
                 GameTime continuousGameTime = new GameTime(totalTime, TimeSpan.FromMilliseconds(16.67)); // ~60fps
@@ -1100,7 +1351,8 @@ namespace Proximity.Content
                 // Force player to not be attacking for weapon idle animations
                 typeof(Player).GetField("IsAttacking", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.SetValue(player, false);
 
-                // Don't update hitboxes during portrait rendering to prevent world hitbox corruption
+                // Update hitboxes for portrait rendering so item effects can draw properly
+                player.UpdateHitboxes(continuousGameTime);
 
                 // Disable head rotation by clearing movement and attack directions
                 var movementDirectionField = typeof(Player).GetField("MovementDirection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1130,6 +1382,15 @@ namespace Proximity.Content
                         item.PostDraw(portraitBatch, continuousGameTime, player, 0.312f);
                     }
                 }
+
+                Vector2 headOffset = new Vector2(0f, 5f);
+                Vector2 headEyeOrigin = new Vector2(player.T_Head.Width / 2, player.T_Head.Height);
+                portraitBatch.Draw(player.T_Head, player.Position + headOffset, null, player.GetColor(), 0f, headEyeOrigin, 1f,
+                    SpriteEffects.None, 0.31f + 0.002f);
+                portraitBatch.Draw(player.T_Eye, player.Position + headOffset * 2, new Rectangle(0, 0, player.T_Eye.Width, player.T_Eye.Height / 2),
+                    Color.White, 0f, new Vector2(player.T_Eye.Width / 2, player.T_Eye.Height / 2),
+                    1f, SpriteEffects.None, 0.31f + 0.003f);
+
                 foreach (var item in player.EquippedItems.Values)
                 {
                     if (item != null && item.DrawSlot == DrawSlot.BelowHead)
@@ -1177,6 +1438,16 @@ namespace Proximity.Content
                 movementDirectionField?.SetValue(player, originalMovementDirection);
                 attackDirectionField?.SetValue(player, originalAttackDirection);
 
+                // Restore original hitboxes
+                typeof(Player).GetProperty("Hitbox")?.SetValue(player, originalHitbox);
+                typeof(Player).GetProperty("WeaponHitbox")?.SetValue(player, originalWeaponHitbox);
+                typeof(Player).GetProperty("OffhandHitbox")?.SetValue(player, originalOffhandHitbox);
+                typeof(Player).GetProperty("PlayerSpriteHitbox")?.SetValue(player, originalPlayerSpriteHitbox);
+                typeof(Player).GetProperty("WeaponHitboxRotation")?.SetValue(player, originalWeaponRotation);
+
+                // Restore animation freeze state
+                Item.FreezeGameWorldAnimations = originalFreezeState;
+
                 // Clear portrait rendering flag
                 Item.IsRenderingPortrait = false;
 
@@ -1188,6 +1459,42 @@ namespace Proximity.Content
                 graphicsDevice.SetRenderTarget(prevRenderTargets[0].RenderTarget as RenderTarget2D);
             else
                 graphicsDevice.SetRenderTarget(null);
+        }
+
+        private EquipmentSlot? GetEquipmentSlotForItem(Item item)
+        {
+            if (item?.Type == null) return null;
+
+            string type = item.Type.ToLower();
+            if (type.Contains("sword") || type.Contains("staff") || type.Contains("gun") || type.Contains("weapon"))
+                return EquipmentSlot.Weapon;
+            else if (type.Contains("helmet"))
+                return EquipmentSlot.Helmet;
+            else if (type.Contains("chestplate"))
+                return EquipmentSlot.Chestplate;
+            else if (type.Contains("offhand"))
+                return EquipmentSlot.Offhand;
+
+            return null;
+        }
+
+        private Color GetStatComparisonColor(string statText, Item item, Player player, int slotIdx)
+        {
+            if (slotIdx < 0) return Color.White; // No comparison for equipped items
+            var targetSlot = GetEquipmentSlotForItem(item);
+            if (!targetSlot.HasValue || !player.EquippedItems.TryGetValue(targetSlot.Value, out var equipped) || equipped == null) return Color.White;
+
+            float itemStat = 0, equippedStat = 0;
+            if (statText.Contains("damage")) { itemStat = item.Damage; equippedStat = equipped.Damage; }
+            else if (statText.Contains("defense")) { itemStat = item.Defense; equippedStat = equipped.Defense; }
+            else if (statText.Contains("knockback") && !statText.Contains("resistance")) { itemStat = item.Knockback; equippedStat = equipped.Knockback; }
+            else if (statText.Contains("range")) { itemStat = item.ShootSpeed; equippedStat = equipped.ShootSpeed; }
+            else if (statText.Contains("uses per second")) { itemStat = 1f / item.UseTime; equippedStat = 1f / equipped.UseTime; }
+            else if (statText.Contains("knockback resistance")) { itemStat = item.KnockbackResistance; equippedStat = equipped.KnockbackResistance; }
+            else if (statText.Contains("gold")) { itemStat = item.Value; equippedStat = equipped.Value; }
+            else return Color.White;
+
+            return itemStat > equippedStat ? Color.LightGreen : itemStat < equippedStat ? Color.LightCoral : Color.White;
         }
 
         private void DrawNineSliceBox(SpriteBatch spriteBatch, Texture2D texture, Rectangle dest, int spriteSize, Color color, bool keepCenterClear = false)

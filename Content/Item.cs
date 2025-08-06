@@ -16,8 +16,6 @@ namespace Proximity.Content
 
     public abstract class Item
     {
-        private const string TEXTURE_PATH_FORMAT = "Textures/Items/t_Item_{0}";
-
         public static bool FreezeGameWorldAnimations { get; set; } = false;
         public static bool IsRenderingPortrait { get; set; } = false;
 
@@ -83,11 +81,13 @@ namespace Proximity.Content
         {
             try
             {
-                string texturePath = string.Format(TEXTURE_PATH_FORMAT, ID);
+                string texturePath = $"Textures/Items/t_Item_{ID}";
                 Texture = contentManager.Load<Texture2D>(texturePath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Log texture loading failure for debugging
+                System.Diagnostics.Debug.WriteLine("Failed to load texture for item " + ID + ": " + ex.Message);
             }
         }
 
@@ -105,11 +105,6 @@ namespace Proximity.Content
 
         public virtual void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
-        }
-
-        private bool IsPortraitRendering(GameTime gameTime)
-        {
-            return Math.Abs(gameTime.ElapsedGameTime.TotalMilliseconds - 16.67) < 1.0;
         }
 
         public virtual void Use(float deltaTime, Player player, Vector2 direction)
@@ -136,21 +131,21 @@ namespace Proximity.Content
 
         public static (string Name, Color Color) GetRarityInfo(int rarity)
         {
-            if (rarity >= 0 && rarity < Rarities.Length)
-                return Rarities[rarity];
-            return ("", Color.White);
+            if (rarity < 0 || rarity >= Rarities.Length)
+                return ("Unknown", Color.White);
+            return Rarities[rarity];
         }
 
         public virtual void UpdateHitboxes(Player player, GameTime gameTime)
         {
             if (FreezeGameWorldAnimations && !IsRenderingPortrait)
                 return;
-                
+
             if (Type.StartsWith("[Weapon"))
             {
-                var (hitbox, rotation) = CalculateWeaponHitbox(player, gameTime);
-                player.WeaponHitbox = hitbox;
-                player.WeaponHitboxRotation = rotation;
+                var (weaponHitbox, weaponRotation) = CalculateWeaponHitbox(player, gameTime);
+                player.WeaponHitbox = weaponHitbox;
+                player.WeaponHitboxRotation = weaponRotation;
             }
             else if (Type.StartsWith("[Offhand"))
             {
@@ -167,15 +162,14 @@ namespace Proximity.Content
 
             if (Type == "[Weapon - Staff]")
             {
-                float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * (1 - (player.jumpTime / Player.JUMP_TIME_VALUE))) : 0f;
+                float jumpProgress = player.IsJumping ? 1f - (player.jumpTime / Player.JUMP_TIME_VALUE) : 0f;
+                float jumpOffset = player.IsJumping ? -Player.JUMP_BOUNCE_HEIGHT * (float)Math.Sin(Math.PI * jumpProgress) : 0f;
                 Vector2 drawPosition = player.Position + new Vector2(0, jumpOffset);
 
                 float time = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds;
 
                 float sideOffset = (player.T_Body.Width / 2f + Texture.Width / 2) * (player.IsFacingLeft ? -1f : 1f);
                 float walkBobOffset = player.IsMoving ? Math.Abs((float)Math.Sin(player.WalkTimer * MathHelper.TwoPi)) * Player.WALK_BOUNCE_HEIGHT : 0f;
-
-                float jumpProgress = player.IsJumping ? 1f - (player.jumpTime / Player.JUMP_TIME_VALUE) : 0f;
                 float jumpScale = player.IsJumping ? Player.BASE_SCALE + (Player.JUMP_SCALE - Player.BASE_SCALE) * (float)Math.Sin(Math.PI * jumpProgress) : Player.BASE_SCALE;
                 float jumpRaise = player.IsJumping ? Texture.Height / 1.75f * (float)Math.Sin(Math.PI * jumpProgress) : 0f;
 

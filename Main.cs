@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input.Touch;
 using Proximity.Content;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Proximity
 {
@@ -139,7 +138,6 @@ namespace Proximity
 
             InventoryOpen = inventory.IsOpen;
 
-            // Update InputManager states
             InputManager.Instance.PreUpdate();
             InputManager.Instance.PostUpdate(gameTime);
 
@@ -149,7 +147,6 @@ namespace Proximity
                 isPaused = !isPaused;
             }
 
-            // PC: Use InputManager for single key press
             if (InputManager.Instance.IsKeySinglePress(Keys.Escape))
             {
                 isPaused = !isPaused;
@@ -168,7 +165,6 @@ namespace Proximity
                 return;
             }
 
-            // PC: Use InputManager for single key press
             if (InputManager.Instance.IsKeySinglePress(Keys.I))
             {
                 inventory.IsOpen = !inventory.IsOpen;
@@ -213,7 +209,6 @@ namespace Proximity
             }
             pickupButtonTouchState = currentPickupTouch;
 
-            // PC: Pick up item with F key
             if (InputManager.Instance.IsKeySinglePress(Keys.F))
             {
                 inventory.TryPickingItem(player, itemProperties.DroppedItems, floatingTextManager);
@@ -224,7 +219,6 @@ namespace Proximity
 
         protected override void Draw(GameTime gameTime)
         {
-            // Render the game world to the grayscale render target
             GraphicsDevice.SetRenderTarget(grayscaleRenderTarget);
             GraphicsDevice.Clear(Color.Transparent);
             DrawGameWorld(gameTime);
@@ -234,7 +228,6 @@ namespace Proximity
             DrawUI();
             GraphicsDevice.SetRenderTarget(null);
 
-            // Draw the grayscale render target with the grayscale effect
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, isPaused ? grayscaleEffect : null);
             spriteBatch.Draw(grayscaleRenderTarget, Vector2.Zero, Color.White);
             if (inventory != null && inventory.IsOpen)
@@ -395,50 +388,31 @@ namespace Proximity
         {
             bool currentTouchState = touches.IsTouching(debugButtonRectangle);
 
-            // Touch input for debug menu
             if (currentTouchState && !debugTouchState)
             {
                 DebugMode = !DebugMode;
             }
             debugTouchState = currentTouchState;
 
-            // Mouse input for debug menu
             var mouseState = InputManager.Instance.currentMouseState;
             var prevMouseState = InputManager.Instance.previousMouseState;
             Point mousePoint = new Point(mouseState.X, mouseState.Y);
             bool mouseClicked = mouseState.LeftButton == ButtonState.Pressed && prevMouseState.LeftButton == ButtonState.Released;
 
-            // Toggle debug info by clicking debug button
             if (mouseClicked && debugButtonRectangle.Contains(mousePoint))
             {
                 DebugMode = !DebugMode;
             }
-            // Spawn item by clicking spawn item button
             if (mouseClicked && spawnItemButtonRectangle.Contains(mousePoint))
             {
                 Random random = new Random();
                 itemProperties.DropItem(random.Next(0, itemProperties.Items.Count + 1), random.Next(0, 5), random.Next(0, 5), new Vector2(random.NextFloat(player.Position.X - 200, player.Position.X + 200), random.NextFloat(player.Position.Y - 200, player.Position.Y + 200)));
             }
-            // Spawn NPC by clicking spawn NPC button
             if (mouseClicked && spawnNPCButtonRectangle.Contains(mousePoint))
             {
                 Random random = new Random();
                 npcProperties.NewNPC(0, new Vector2(random.NextFloat(player.Position.X - 200, player.Position.X + 200), random.NextFloat(player.Position.Y - 200, player.Position.Y + 200)));
             }
-            // Cycle item in debug item menu by clicking item buttons
-            foreach (var button in debugItemButtons)
-            {
-                if (mouseClicked && button.Value.Contains(mousePoint))
-                {
-                    if (Enum.TryParse<EquipmentSlot>(button.Key, out var slot))
-                    {
-                        CycleItemInSlot(slot);
-                    }
-                    break;
-                }
-            }
-
-            // Keyboard input for debug menu (optional, keep for power users)
             if (InputManager.Instance.IsKeySinglePress(Keys.F3))
             {
                 DebugMode = !DebugMode;
@@ -453,46 +427,6 @@ namespace Proximity
                 Random random = new Random();
                 npcProperties.NewNPC(0, new Vector2(random.NextFloat(player.Position.X - 200, player.Position.X + 200), random.NextFloat(player.Position.Y - 200, player.Position.Y + 200)));
                 npcProperties.NewNPC(1, new Vector2(1000, 1000));
-            }
-            if (InputManager.Instance.IsKeySinglePress(Keys.F4))
-            {
-                // F4 cycles next (legacy), E for next, Q for previous
-                CycleItemInSlot(EquipmentSlot.Weapon);
-            }
-            if (InputManager.Instance.IsKeySinglePress(Keys.E))
-            {
-                CycleItemInSlot(EquipmentSlot.Weapon, true); // true = next
-            }
-            if (InputManager.Instance.IsKeySinglePress(Keys.Q))
-            {
-                CycleItemInSlot(EquipmentSlot.Weapon, false); // false = previous
-            }
-            if (InputManager.Instance.IsKeySinglePress(Keys.F5))
-            {
-                CycleItemInSlot(EquipmentSlot.Offhand);
-            }
-
-            UpdateDebugItemMenu(touches);
-        }
-
-        private void UpdateDebugItemMenu(TouchCollection touches)
-        {
-            foreach (var touch in touches)
-            {
-                if (touch.State == TouchLocationState.Pressed)
-                {
-                    foreach (var button in debugItemButtons)
-                    {
-                        if (button.Value.Contains(touch.Position))
-                        {
-                            if (Enum.TryParse<EquipmentSlot>(button.Key, out var slot))
-                            {
-                                CycleItemInSlot(slot);
-                            }
-                            break;
-                        }
-                    }
-                }
             }
         }
 
@@ -562,11 +496,11 @@ namespace Proximity
                 DrawInventoryButton();
                 DrawSpawnButtons();
 
-                /*spriteBatch.Draw(Main.Pixel, PickupButtonRectangle, Color.LightGreen * 0.7f);
+                spriteBatch.Draw(Main.Pixel, PickupButtonRectangle, Color.LightGreen * 0.7f);
                 var text = "PICK UP";
                 var textSize = Font.MeasureString(text);
                 var textPos = new Vector2(PickupButtonRectangle.Center.X - textSize.X / 2, PickupButtonRectangle.Center.Y - textSize.Y / 2);
-                Font.DrawString(spriteBatch, text, textPos, Color.White);*/
+                Font.DrawString(spriteBatch, text, textPos, Color.White);
             }
             spriteBatch.Draw(pixel, PauseButtonRectangle, Color.Gray * 0.7f);
             var pauseText = "II";
@@ -584,7 +518,7 @@ namespace Proximity
 
         private void DrawJumpButton()
         {
-            /*var originalPosition = new Vector2(
+            var originalPosition = new Vector2(
                 GraphicsDevice.Viewport.Width - (joystickBase.Width * JOYSTICK_OFFSET) - joystickJump.Width / 2,
                 GraphicsDevice.Viewport.Height - (joystickBase.Height * JOYSTICK_OFFSET) - joystickJump.Height * JUMP_BUTTON_OFFSET
             );
@@ -602,7 +536,7 @@ namespace Proximity
                 scale,
                 SpriteEffects.None,
                 0f
-            );*/
+            );
         }
 
         private void DrawDebugInfo()
@@ -839,24 +773,22 @@ namespace Proximity
 
         private void DrawDebugButton()
         {
-            /* var buttonColor = DebugMode ? Color.White : Color.Gray;
-             spriteBatch.Draw(pixel, debugButtonRectangle, buttonColor * DEBUG_BUTTON_OPACITY);
-             spriteBatch.DrawRectangleBorder(debugButtonRectangle, Color.White, Color.Black, 0f, DEBUG_BUTTON_BORDER);
+            var buttonColor = DebugMode ? Color.White : Color.Gray;
+            spriteBatch.Draw(pixel, debugButtonRectangle, buttonColor * DEBUG_BUTTON_OPACITY);
+            spriteBatch.DrawRectangleBorder(debugButtonRectangle, Color.White, Color.Black, 0f, DEBUG_BUTTON_BORDER);
 
-             var textPosition = new Vector2(debugButtonRectangle.X + 5, debugButtonRectangle.Y + 10);
-             Font.DrawString(
-                 spriteBatch,
-                 "DBG",
-                 textPosition,
-                 buttonColor
-             );
-
-             DrawDebugItemMenu();*/
+            var textPosition = new Vector2(debugButtonRectangle.X + 5, debugButtonRectangle.Y + 10);
+            Font.DrawString(
+                spriteBatch,
+                "DBG",
+                textPosition,
+                buttonColor
+            );
         }
 
         private void DrawSpawnButtons()
         {
-            /*spriteBatch.Draw(pixel, spawnItemButtonRectangle, Color.Red);
+            spriteBatch.Draw(pixel, spawnItemButtonRectangle, Color.Red);
             spriteBatch.Draw(pixel, spawnNPCButtonRectangle, Color.Blue);
 
             var textPosition = new Vector2(spawnItemButtonRectangle.X + 5, spawnItemButtonRectangle.Y + 10);
@@ -873,55 +805,20 @@ namespace Proximity
                 textPosition2,
                 Color.White
             );
-
-            DrawDebugItemMenu();*/
-        }
-
-        private void DrawDebugItemMenu()
-        {
-            int startY = debugButtonRectangle.Bottom + 10;
-            debugItemButtons.Clear();
-
-            foreach (var slot in player.EquippedItems.Keys)
-            {
-                var buttonRect = new Rectangle(
-                    debugButtonRectangle.X,
-                    startY,
-                    DEBUG_ITEM_BUTTON_WIDTH,
-                    DEBUG_ITEM_BUTTON_HEIGHT
-                );
-                debugItemButtons[slot.ToString()] = buttonRect;
-
-                var buttonColor = Color.Gray * 0.7f;
-                spriteBatch.Draw(pixel, buttonRect, buttonColor);
-                spriteBatch.DrawRectangleBorder(buttonRect, Color.White, Color.Black, 0f, 2);
-
-                var item = player.EquippedItems[slot];
-                string itemName = item != null ? item.GetName() : "Empty";
-                var textPosition = new Vector2(buttonRect.X + 5, buttonRect.Y + 5);
-                Font.DrawString(
-                    spriteBatch,
-                    $"{slot}: {itemName}",
-                    textPosition,
-                    Color.White
-                );
-
-                startY += DEBUG_ITEM_BUTTON_HEIGHT + DEBUG_ITEM_BUTTON_SPACING;
-            }
         }
 
         private void DrawInventoryButton()
         {
-            /* Color buttonColor = inventory.IsOpen ? Color.White : Color.Gray;
-             spriteBatch.Draw(pixel, inventoryButtonRectangle, buttonColor * 0.85f);
-             spriteBatch.DrawRectangleBorder(inventoryButtonRectangle, Color.White, Color.Black, 0f, 2);
-             var text = inventory.IsOpen ? "CLOSE" : "INV";
-             var textSize = Font.MeasureString(text);
-             var textPos = new Vector2(
-                 inventoryButtonRectangle.X + (inventoryButtonRectangle.Width - textSize.X) / 2,
-                 inventoryButtonRectangle.Y + (inventoryButtonRectangle.Height - textSize.Y) / 2
-             );
-             Font.DrawString(spriteBatch, text, textPos, Color.White);*/
+            Color buttonColor = inventory.IsOpen ? Color.White : Color.Gray;
+            spriteBatch.Draw(pixel, inventoryButtonRectangle, buttonColor * 0.85f);
+            spriteBatch.DrawRectangleBorder(inventoryButtonRectangle, Color.White, Color.Black, 0f, 2);
+            var text = inventory.IsOpen ? "CLOSE" : "INV";
+            var textSize = Font.MeasureString(text);
+            var textPos = new Vector2(
+                inventoryButtonRectangle.X + (inventoryButtonRectangle.Width - textSize.X) / 2,
+                inventoryButtonRectangle.Y + (inventoryButtonRectangle.Height - textSize.Y) / 2
+            );
+            Font.DrawString(spriteBatch, text, textPos, Color.White);
         }
 
         private Rectangle GetJumpButtonRectangle()
@@ -932,55 +829,6 @@ namespace Proximity
                 joystickJump.Width,
                 joystickJump.Height
             );
-        }
-
-        private void CycleItemInSlot(EquipmentSlot slot)
-        {
-            CycleItemInSlot(slot, true); // default to next
-        }
-
-        // Overload for direction: true = next, false = previous
-        private void CycleItemInSlot(EquipmentSlot slot, bool next)
-        {
-            var currentItem = player.EquippedItems[slot];
-            int currentId = currentItem?.ID ?? 0;
-            int newId = next ? FindNextItemId(currentId, slot) : FindPreviousItemId(currentId, slot);
-            if (newId != currentId)
-            {
-                player.EquipItem(newId);
-            }
-        }
-
-        private int FindPreviousItemId(int currentId, EquipmentSlot slot)
-        {
-            var availableItems = itemProperties.Items.Values;
-            var slotItems = availableItems.Where(item =>
-                (item.Type.StartsWith("[Weapon") && slot == EquipmentSlot.Weapon) ||
-                (item.Type.StartsWith("[Offhand") && slot == EquipmentSlot.Offhand)
-            ).ToList();
-
-            if (slotItems.Count == 0) return currentId;
-
-            int currentIndex = slotItems.FindIndex(item => item.ID == currentId);
-            int prevIndex = (currentIndex - 1 + slotItems.Count) % slotItems.Count;
-            return slotItems[prevIndex].ID;
-        }
-
-        private int FindNextItemId(int currentId, EquipmentSlot slot)
-        {
-            var availableItems = itemProperties.Items.Values;
-
-            var slotItems = availableItems.Where(item =>
-                (item.Type.StartsWith("[Weapon") && slot == EquipmentSlot.Weapon) ||
-                (item.Type.StartsWith("[Offhand") && slot == EquipmentSlot.Offhand)
-            ).ToList();
-
-            if (slotItems.Count == 0) return currentId;
-
-            int currentIndex = slotItems.FindIndex(item => item.ID == currentId);
-
-            int nextIndex = (currentIndex + 1) % slotItems.Count;
-            return slotItems[nextIndex].ID;
         }
 
         private void DisposeResources()
