@@ -23,7 +23,7 @@ namespace Proximity.Content.Items
             Damage = 14;
             Knockback = 400f;
             UseTime = 0.6f;
-            ShootSpeed = 200f;
+            SwingRange = 200f;
         }
 
         public override void PreDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)

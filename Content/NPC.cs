@@ -156,7 +156,7 @@ namespace Proximity.Content
                         float distance = toNPC.Length();
                         if (distance <= attackRadius)
                         {
-                            float swingRange = weapon.ShootSpeed / 1.25f;
+                            float swingRange = weapon.SwingRange / 1.25f;
                             Vector2 attackDir = player.AttackDirection;
                             if (attackDir == Vector2.Zero) attackDir = Vector2.UnitX;
                             float attackAngle = (float)Math.Atan2(attackDir.Y, attackDir.X);

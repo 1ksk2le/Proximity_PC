@@ -102,7 +102,7 @@ namespace Proximity.Content.Items
             );
             rotatedDirection.Normalize();
 
-            projectile.NewProjectile(3, 1, Damage, Knockback, ShootSpeed * random.NextFloat(0.8f, 1.2f), random.NextFloat(0.3f, 1.2f), spawnPosition, rotatedDirection);
+            projectile.NewProjectile(3, 1, Damage, Knockback, player.ShootSpeed * random.NextFloat(0.8f, 1.2f), random.NextFloat(0.3f, 1.2f), spawnPosition, rotatedDirection);
 
             const int muzzleParticles = 5;
             float muzzleConeAngle = MathHelper.ToRadians(20f);

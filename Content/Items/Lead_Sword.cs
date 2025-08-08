@@ -20,7 +20,7 @@ namespace Proximity.Content.Items
             Value = 125;
             Damage = 7;
             UseTime = 0.75f;
-            ShootSpeed = 110f;
+            SwingRange = 110f;
             Knockback = 150f;
         }
 

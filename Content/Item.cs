@@ -35,6 +35,7 @@ namespace Proximity.Content
         public DrawSlot DrawSlot { get; protected set; }
         public float UseTime { get; protected set; }
         public float ShootSpeed { get; set; }
+        public float SwingRange { get; set; }
         public float Recoil { get; set; }
         public float Knockback { get; set; }
         public float KnockbackResistance { get; set; }
@@ -50,6 +51,7 @@ namespace Proximity.Content
         public float DefenseBonus { get; protected set; }
         public float KnockbackBonus { get; protected set; }
         public float KnockbackResistanceBonus { get; protected set; }
+        public float ShootSpeedBonus { get; protected set; }
         public bool IsStackable { get; protected set; }
 
         protected Item(ContentManager contentManager, ParticleManager particleManager, ProjectileProperties projectileProperties)
@@ -253,12 +255,12 @@ namespace Proximity.Content
                     if (attackProgress < windUpRatio)
                     {
                         float windUpProgress = attackProgress / windUpRatio;
-                        swingOffset = -MathHelper.ToRadians(ShootSpeed / 2) * (1 - (float)Math.Cos(windUpProgress * MathHelper.PiOver2));
+                        swingOffset = -MathHelper.ToRadians(SwingRange / 2) * (1 - (float)Math.Cos(windUpProgress * MathHelper.PiOver2));
                     }
                     else
                     {
                         float swingProgress = (attackProgress - windUpRatio) / (1 - windUpRatio);
-                        swingOffset = MathHelper.ToRadians(ShootSpeed) * (float)Math.Sin(swingProgress * MathHelper.PiOver2);
+                        swingOffset = MathHelper.ToRadians(SwingRange) * (float)Math.Sin(swingProgress * MathHelper.PiOver2);
                     }
 
                     float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);
@@ -436,12 +438,12 @@ namespace Proximity.Content
                 if (attackProgress < windUpRatio)
                 {
                     float windUpProgress = attackProgress / windUpRatio;
-                    swingOffset = -MathHelper.ToRadians(ShootSpeed / 2) * (1 - (float)Math.Cos(windUpProgress * MathHelper.PiOver2));
+                    swingOffset = -MathHelper.ToRadians(SwingRange / 2) * (1 - (float)Math.Cos(windUpProgress * MathHelper.PiOver2));
                 }
                 else
                 {
                     float swingProgress = (attackProgress - windUpRatio) / (1 - windUpRatio);
-                    swingOffset = MathHelper.ToRadians(ShootSpeed) * (float)Math.Sin(swingProgress * MathHelper.PiOver2);
+                    swingOffset = MathHelper.ToRadians(SwingRange) * (float)Math.Sin(swingProgress * MathHelper.PiOver2);
                 }
 
                 float baseAngle = (float)Math.Atan2(player.AttackDirection.Y, player.AttackDirection.X);

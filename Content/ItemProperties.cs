@@ -130,6 +130,7 @@ namespace Proximity.Content
                         0.15f
                     );
 
+                    var rarityInfo = drop.Item != null ? Item.GetRarityInfo(drop.Item.Rarity) : Item.GetRarityInfo(0);
                     // If player hitbox intersects, draw item name above
                     if (playerHitbox.Intersects(itemRect))
                     {
@@ -141,7 +142,7 @@ namespace Proximity.Content
                             spriteBatch,
                             itemName,
                             namePos - nameSize / 2f,
-                            Color.White,
+                            rarityInfo.Color,
                             scale: perspectiveScale
                         );
                     }
@@ -172,6 +173,22 @@ namespace Proximity.Content
                     if (ItemModifier.Suffixes.TryGetValue(suffixId, out var suffix))
                         totalBonus += suffix.DamageBonus;
                     return (baseDamage * totalBonus) + baseDamage;
+                },
+                prefix => 0f,
+                suffix => 0f
+            );
+
+        public float GetShotSpeedModifier(int itemId, int prefixId, int suffixId) =>
+            CalculateModifier(itemId, prefixId, suffixId,
+                item =>
+                {
+                    float baseShootSpeed = item.ShootSpeed;
+                    float totalBonus = item.ShootSpeedBonus;
+                    if (ItemModifier.Prefixes.TryGetValue(prefixId, out var prefix))
+                        totalBonus += prefix.ShootSpeedBonus;
+                    if (ItemModifier.Suffixes.TryGetValue(suffixId, out var suffix))
+                        totalBonus += suffix.ShootSpeedBonus;
+                    return (baseShootSpeed * totalBonus) + baseShootSpeed;
                 },
                 prefix => 0f,
                 suffix => 0f
@@ -285,28 +302,12 @@ namespace Proximity.Content
 
         private static void InitializePrefixes()
         {
-            Prefixes.Add(1, new Prefix(0, "Sharp", "Increases damage by 10%") { DamageBonus = 0.1f });
-            Prefixes.Add(2, new Prefix(1, "Swift", "Increases speed by 5%") { SpeedBonus = 0.05f });
-            Prefixes.Add(3, new Prefix(2, "Sturdy", "Increases defense by 10%") { DefenseBonus = 0.1f });
-            Prefixes.Add(4, new Prefix(3, "Healthy", "Increases health by 15%") { HealthBonus = 0.15f });
-            Prefixes.Add(5, new Prefix(4, "Steady", "Increases knockback resistance by 20%") { KnockbackResistanceBonus = 0.2f });
-            Prefixes.Add(6, new Prefix(5, "Crude", "Decreases damage by 10%") { DamageBonus = -0.1f });
+            Prefixes.Add(1, new Prefix(1, "Sharp", "Increases damage by 10%") { ShootSpeedBonus = 10f });
         }
 
         private static void InitializeSuffixes()
         {
-            Suffixes.Add(1, new Suffix(1, "of Power", "Increases all stats by 5%")
-            {
-                SpeedBonus = 0.05f,
-                HealthBonus = 0.05f,
-                DamageBonus = 0.05f,
-                DefenseBonus = 0.05f,
-                KnockbackResistanceBonus = 0.05f
-            });
-            Suffixes.Add(2, new Suffix(2, "of Agility", "Increases speed by 10%") { SpeedBonus = 0.1f });
-            Suffixes.Add(3, new Suffix(3, "of Defense", "Increases defense by 15%") { DefenseBonus = 0.15f });
-            Suffixes.Add(4, new Suffix(4, "of Vitality", "Increases health by 20%") { HealthBonus = 0.2f });
-            Suffixes.Add(5, new Suffix(5, "of Stability", "Increases knockback resistance by 25%") { KnockbackResistanceBonus = 0.25f });
+            Suffixes.Add(1, new Suffix(1, "of Power", "Increases all stats by 5%") { ShootSpeedBonus = 10f });
         }
     }
 
@@ -321,6 +322,7 @@ namespace Proximity.Content
         public float DamageBonus { get; set; }
         public float DefenseBonus { get; set; }
         public float KnockbackResistanceBonus { get; set; }
+        public float ShootSpeedBonus { get; set; }
 
         public Prefix(int id, string name, string effect)
         {
@@ -341,6 +343,7 @@ namespace Proximity.Content
         public float DamageBonus { get; set; }
         public float DefenseBonus { get; set; }
         public float KnockbackResistanceBonus { get; set; }
+        public float ShootSpeedBonus { get; set; }
 
         public Suffix(int id, string name, string effect)
         {

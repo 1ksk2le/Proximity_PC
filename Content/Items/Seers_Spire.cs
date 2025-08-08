@@ -167,7 +167,7 @@ namespace Proximity.Content.Items
                         0,
                         Damage,
                         Knockback,
-                        ShootSpeed + random.Next(-300, 300),
+                        player.ShootSpeed + random.Next(-300, 300),
                         0.8f + (float)random.NextFloat(0.2f, 1f),
                         spawnPos + soul.Offset,
                         randomizedDir

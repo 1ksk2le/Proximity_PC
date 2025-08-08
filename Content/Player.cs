@@ -102,6 +102,7 @@ namespace Proximity.Content
         public float Knockback => CalculateKnockback();
         public int Defense => CalculateDefense();
         public float KnockbackResistance => CalculateKnockbackResistance();
+        public float ShootSpeed => CalculateShootSpeed();
 
         public Player(Joystick movementJoystick, Joystick attackJoystick, Texture2D playerHead, Texture2D playerBody,
             Texture2D playerEye, Texture2D shadowTexture, Vector2 position, ItemProperties itemProperties, ParticleManager particleManager, FloatingTextManager floatingTextManager, float skinColor)
@@ -613,7 +614,7 @@ namespace Proximity.Content
                     Vector2 attackDir = AttackDirection;
                     if (attackDir == Vector2.Zero) attackDir = Vector2.UnitX;
                     float attackAngle = (float)Math.Atan2(attackDir.Y, attackDir.X);
-                    float swingRange = weapon.ShootSpeed / 1.25f;
+                    float swingRange = weapon.SwingRange / 1.25f;
                     float minAngle = attackAngle - MathHelper.ToRadians(swingRange / 2f);
                     float maxAngle = attackAngle + MathHelper.ToRadians(swingRange / 2f);
                     int arcSegments = 48;
@@ -718,6 +719,24 @@ namespace Proximity.Content
             return Math.Max(BASE_DAMAGE, damage);
         }
 
+        private int CalculateShootSpeed()
+        {
+            int range = 0;
+
+            foreach (var item in Equipment.Values)
+            {
+                if (item != null)
+                {
+                    int prefixId = GetModifierIdFromName(item.Prefix, ItemModifier.Prefixes);
+                    int suffixId = GetModifierIdFromName(item.Suffix, ItemModifier.Suffixes);
+
+                    range += (int)itemProperties.GetShotSpeedModifier(item.ID, prefixId, suffixId);
+                }
+            }
+
+            return Math.Max(0, range);
+        }
+
         private int CalculateDefense()
         {
             int defense = BASE_DEFENSE;
@@ -751,7 +770,7 @@ namespace Proximity.Content
                 }
             }
 
-            return Math.Max(BASE_DEFENSE, knockback);
+            return Math.Max(BASE_KNOCKBACK, knockback);
         }
 
         private float CalculateKnockbackResistance()

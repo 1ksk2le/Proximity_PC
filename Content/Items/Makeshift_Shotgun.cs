@@ -104,7 +104,7 @@ namespace Proximity.Content.Items
                     (float)Math.Sin(randomAngle) * correctedDirection.X + (float)Math.Cos(randomAngle) * correctedDirection.Y
                 ));
 
-                projectile.NewProjectile(1, 0, Damage, Knockback, ShootSpeed + random.NextFloat(-150f, 150f), 0.5f, spawnPosition, spreadDirection);
+                projectile.NewProjectile(1, 0, Damage, Knockback, player.ShootSpeed + random.NextFloat(-150f, 150f), 0.5f, spawnPosition, spreadDirection);
             }
 
             const int muzzleParticles = 20;

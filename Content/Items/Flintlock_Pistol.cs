@@ -93,7 +93,7 @@ namespace Proximity.Content.Items
             Vector2 intendedTarget = playerCenter + direction * 1000f;
             Vector2 correctedDirection = Vector2.Normalize(intendedTarget - spawnPosition);
 
-            projectile.NewProjectile(1, 0, Damage, Knockback, ShootSpeed, 1f, spawnPosition, correctedDirection);
+            projectile.NewProjectile(1, 0, Damage, Knockback, player.ShootSpeed, 1f, spawnPosition, correctedDirection);
 
             const int muzzleParticles = 10;
             float muzzleConeAngle = MathHelper.ToRadians(30f);
