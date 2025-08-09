@@ -242,6 +242,7 @@ namespace Proximity.Content.Items
         public override void PostDraw(SpriteBatch spriteBatch, GameTime gameTime, Player player, float drawLayer)
         {
             base.PostDraw(spriteBatch, gameTime, player, drawLayer);
+            if (Main.Paused) return;
             float pulseTime = ((FreezeGameWorldAnimations && !IsRenderingPortrait) || (Main.Paused && !IsRenderingPortrait)) ? 0f : (float)gameTime.TotalGameTime.TotalSeconds * 2f;
             float pulse = (float)(0.5 + 0.5 * Math.Sin(pulseTime));
             Color colorA = new Color(0, 226, 189, 110);

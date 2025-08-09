@@ -10,26 +10,105 @@ namespace Proximity.Content
 {
     public class Inventory
     {
+        #region Constants
+
         public const int Columns = 5;
         public const int Rows = 20;
         public const int TotalSlots = Columns * Rows;
         public const int VisibleRows = 5;
         public const int VisibleSlots = Columns * VisibleRows;
+        private const int SlotSize = 100;
+        private const int StatBoxSpriteSize = 45;
+        private const int StatIconSize = 30;
+        private const int StarSmallIconSize = 33;
+        private const int StarSmallGap = 4;
+        private const int IconBoxPadding = 55;
+        private const int bottomPadding = 40;
+        private const int itemIconPadding = 20;
+        private const int PortraitSize = 300;
+        private const float STATS_ANIMATION_SPEED = 5f;
+
+        #endregion Constants
+
+        #region Core Fields
 
         private readonly List<Item> items;
+        private readonly int screenWidth, screenHeight;
+        private readonly int slotWidth, slotHeight;
+        private readonly int renderTargetWidth, renderTargetHeight;
+        private bool isOpen;
+
+        #endregion Core Fields
+
+        #region Textures
+
+        private readonly Texture2D slotTexture;
+        private readonly Texture2D thumbTexture;
+        private readonly Texture2D statBoxTexture;
+        private readonly Texture2D statBoxOutlineTexture;
+        private readonly Texture2D statBoxOutlineTextureReversed;
+        private readonly Texture2D statIconsTexture;
+        private readonly Texture2D starTexture;
+
+        #endregion Textures
+
+        #region Render Targets
+
+        private RenderTarget2D inventoryRenderTarget;
+        private RenderTarget2D infoBoxRenderTarget;
+        private RenderTarget2D playerPortraitRenderTarget;
+
+        #endregion Render Targets
+
+        #region Scrolling State
+
         private float scrollOffset;
         private float lastTouchY;
         private bool isTouching;
-        private readonly Texture2D slotTexture;
-        private readonly Texture2D thumbTexture;
-        private readonly int slotWidth;
-        private readonly int slotHeight;
-        private readonly int screenWidth;
-        private readonly int screenHeight;
-        private RenderTarget2D inventoryRenderTarget;
-        private readonly int renderTargetWidth;
-        private readonly int renderTargetHeight;
-        private bool isOpen;
+        private float infoBoxScrollOffset = 0f;
+        private float infoBoxLastTouchY = 0f;
+        private bool infoBoxIsTouching = false;
+
+        #endregion Scrolling State
+
+        #region Selection State
+
+        private int? selectedItemSlot = null;
+        private int lastSelectedItemSlot = -1;
+
+        #endregion Selection State
+
+        #region Stats Animation
+
+        private bool isStatsVisible = false;
+        private float statsBoxOffset = 0f;
+        private bool isAnimatingStats = false;
+
+        #endregion Stats Animation
+
+        #region Sorting Animation
+
+        private float[] sortBoxOffsets = new float[5];
+        private const float TARGET_OFFSET = 50f;
+        private int chosenSortingMethod = 3;
+        private int previousSortingMethod = -1;
+
+        #endregion Sorting Animation
+
+        #region Portrait System
+
+        private ParticleManager portraitParticleManager;
+        private ContentManager contentManager;
+        private bool portraitParticleManagerInitialized = false;
+        private static DateTime portraitStartTime = DateTime.Now;
+
+        #endregion Portrait System
+
+        #region Mouse Input
+
+        private int previousWheelValue = 0;
+
+        #endregion Mouse Input
 
         public bool IsOpen
         {
@@ -44,105 +123,100 @@ namespace Proximity.Content
             }
         }
 
-        private const int SlotSize = 100;
-
-        private int? selectedItemSlot = null;
-        private Texture2D statBoxTexture;
-        private Texture2D statBoxOutlineTexture;
-        private Texture2D statBoxOutlineTextureReversed;
-        private const int StatBoxSpriteSize = 45;
-        private Texture2D statIconsTexture;
-        private const int StatIconSize = 30;
-
-        // Scrollable info box state
-        private RenderTarget2D infoBoxRenderTarget;
-
-        private float infoBoxScrollOffset = 0f;
-        private float infoBoxLastTouchY = 0f;
-        private bool infoBoxIsTouching = false;
-        private int lastSelectedItemSlot = -1;
-        private Texture2D starTexture;
-        private const int StarSmallIconSize = 33;
-        private const int StarSmallGap = 4;
-        private const int IconBoxPadding = 55;
-        private const int bottomPadding = 40;
-        private const int itemIconPadding = 20;
-
-        // Player portrait render target
-        private RenderTarget2D playerPortraitRenderTarget;
-
-        private ParticleManager portraitParticleManager;
-        private ContentManager contentManager;
-        private bool portraitParticleManagerInitialized = false;
-
-        private const int PortraitSize = 300;
-
-        private bool isStatsVisible = false;
-        private float statsBoxOffset = 0f;
-        private const float STATS_ANIMATION_SPEED = 5f;
-        private bool isAnimating = false;
-
         public Inventory(ContentManager content, int screenWidth, int screenHeight)
         {
-            items = new List<Item>(TotalSlots);
-            for (int i = 0; i < TotalSlots; i++)
-                items.Add(null);
-            slotTexture = content.Load<Texture2D>("Textures/UI/t_Inventory");
+            // Initialize core properties
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
             this.contentManager = content;
             slotWidth = SlotSize;
             slotHeight = SlotSize;
-            scrollOffset = 0f;
-            lastTouchY = 0f;
-            isTouching = false;
             renderTargetWidth = slotWidth * Columns;
             renderTargetHeight = slotHeight * (VisibleRows + 2);
+
+            // Initialize items array
+            items = new List<Item>(TotalSlots);
+            for (int i = 0; i < TotalSlots; i++)
+                items.Add(null);
+
+            // Load required texture
+            slotTexture = content.Load<Texture2D>("Textures/UI/t_Inventory");
+
+            // Load optional textures with fallbacks
+            thumbTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Thumb", slotTexture);
+            statBoxTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box", null);
+            statBoxOutlineTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline", null);
+            statBoxOutlineTextureReversed = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline_Reversed", null);
+            statIconsTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Icons", null);
+            starTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_StarSmall", null);
+
+            // Initialize portrait system
             portraitParticleManager = new ParticleManager(content);
-            try { thumbTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Thumb"); } catch { thumbTexture = slotTexture; }
-            try { statBoxTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box"); } catch { statBoxTexture = null; }
-            try { statBoxOutlineTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Box_Outline"); } catch { statBoxOutlineTexture = null; }
-            try { statBoxOutlineTextureReversed = content.Load<Texture2D>("Textures/UI/t_Inventory_Box_Outline_Reversed"); } catch { statBoxOutlineTexture = null; }
-            try { statIconsTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_Icons"); } catch { statIconsTexture = null; }
-            try { starTexture = content.Load<Texture2D>("Textures/UI/t_Inventory_StarSmall"); } catch { starTexture = null; }
         }
+
+        private Texture2D LoadTextureWithFallback(ContentManager content, string path, Texture2D fallback)
+        {
+            try
+            {
+                return content.Load<Texture2D>(path);
+            }
+            catch
+            {
+                return fallback;
+            }
+        }
+
+        #region Render Target Management
 
         private void EnsureRenderTarget(GraphicsDevice graphicsDevice)
         {
-            if (inventoryRenderTarget == null ||
-                inventoryRenderTarget.Width != renderTargetWidth ||
-                inventoryRenderTarget.Height != renderTargetHeight)
+            if (IsRenderTargetInvalid(inventoryRenderTarget, renderTargetWidth, renderTargetHeight))
             {
                 inventoryRenderTarget?.Dispose();
-                inventoryRenderTarget = new RenderTarget2D(
-                    graphicsDevice,
-                    renderTargetWidth,
-                    renderTargetHeight,
-                    false,
-                    SurfaceFormat.Color,
-                    DepthFormat.None
-                );
+                inventoryRenderTarget = CreateRenderTarget(graphicsDevice, renderTargetWidth, renderTargetHeight);
             }
         }
 
         private void EnsurePlayerPortraitRenderTarget(GraphicsDevice graphicsDevice)
         {
-            if (playerPortraitRenderTarget == null ||
-                playerPortraitRenderTarget.Width != PortraitSize ||
-                playerPortraitRenderTarget.Height != PortraitSize * 2)
+            int portraitHeight = PortraitSize * 2;
+            if (IsRenderTargetInvalid(playerPortraitRenderTarget, PortraitSize, portraitHeight))
             {
                 playerPortraitRenderTarget?.Dispose();
-                playerPortraitRenderTarget = new RenderTarget2D(
-                    graphicsDevice,
-                    PortraitSize,
-                    PortraitSize * 2,
-                    false,
-                    SurfaceFormat.Color,
-                    DepthFormat.None
-                );
+                playerPortraitRenderTarget = CreateRenderTarget(graphicsDevice, PortraitSize, portraitHeight);
             }
 
-            // Initialize portrait particle manager if not done yet
+            InitializePortraitParticleManager(graphicsDevice);
+        }
+
+        private void EnsureInfoBoxRenderTarget(GraphicsDevice graphicsDevice, int width, int height)
+        {
+            if (IsRenderTargetInvalid(infoBoxRenderTarget, width, height))
+            {
+                infoBoxRenderTarget?.Dispose();
+                infoBoxRenderTarget = CreateRenderTarget(graphicsDevice, width, height);
+            }
+        }
+
+        private bool IsRenderTargetInvalid(RenderTarget2D target, int width, int height)
+        {
+            return target == null || target.Width != width || target.Height != height;
+        }
+
+        private RenderTarget2D CreateRenderTarget(GraphicsDevice graphicsDevice, int width, int height)
+        {
+            return new RenderTarget2D(
+                graphicsDevice,
+                width,
+                height,
+                false,
+                SurfaceFormat.Color,
+                DepthFormat.None
+            );
+        }
+
+        private void InitializePortraitParticleManager(GraphicsDevice graphicsDevice)
+        {
             if (portraitParticleManager != null && !portraitParticleManagerInitialized)
             {
                 try
@@ -152,20 +226,22 @@ namespace Proximity.Content
                 }
                 catch
                 {
-                    // Content loading failed
+                    // Content loading failed - continue without particles
                 }
             }
         }
 
+        #endregion Render Target Management
+
+        #region Scrolling
+
         public void Scroll(float deltaRows)
         {
-            float maxOffsetRows = (TotalSlots - 1) / Columns - VisibleRows + 1;
-            if (maxOffsetRows < 0) maxOffsetRows = 0;
-            float newOffset = scrollOffset + deltaRows;
-            if (newOffset > maxOffsetRows) newOffset = maxOffsetRows;
-            if (newOffset < 0) newOffset = 0;
-            scrollOffset = newOffset;
+            float maxOffsetRows = Math.Max(0, (TotalSlots - 1) / Columns - VisibleRows + 1);
+            scrollOffset = MathHelper.Clamp(scrollOffset + deltaRows, 0, maxOffsetRows);
         }
+
+        #endregion Scrolling
 
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime, Player player)
         {
@@ -237,6 +313,8 @@ namespace Proximity.Content
                 graphicsDevice.SetRenderTarget(prevRenderTargets[0].RenderTarget as RenderTarget2D);
             else
                 graphicsDevice.SetRenderTarget(null);
+
+            //DRAW SORT ICONS
 
             int startY = (screenHeight - (slotHeight * VisibleRows)) / 2;
             int startX = (screenWidth - (slotWidth * Columns)) / 2;
@@ -495,12 +573,8 @@ namespace Proximity.Content
                     bool isEquipped = slotIdx < 0;
                     //System.Diagnostics.Debug.WriteLine($"Item: {selected.GetName()}, IsEquipped: {isEquipped}, ContentHeight: {actualContentHeight}, VisibleHeight: {visibleHeight}");
 
-                    // Now create the properly sized render target
-                    if (infoBoxRenderTarget == null || infoBoxRenderTarget.Width != infoBoxWidth || infoBoxRenderTarget.Height != actualContentHeight)
-                    {
-                        infoBoxRenderTarget?.Dispose();
-                        infoBoxRenderTarget = new RenderTarget2D(spriteBatch.GraphicsDevice, infoBoxWidth, actualContentHeight);
-                    }
+                    // Create the properly sized render target
+                    EnsureInfoBoxRenderTarget(spriteBatch.GraphicsDevice, infoBoxWidth, actualContentHeight);
 
                     // Render the actual content
                     spriteBatch.GraphicsDevice.SetRenderTarget(infoBoxRenderTarget);
@@ -814,7 +888,7 @@ namespace Proximity.Content
             // Update stats box animation
             float targetOffset = isStatsVisible ? 0f : -220f;
             statsBoxOffset = MathHelper.Lerp(statsBoxOffset, targetOffset, STATS_ANIMATION_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds);
-            isAnimating = Math.Abs(statsBoxOffset - targetOffset) > 1f;
+            isAnimatingStats = Math.Abs(statsBoxOffset - targetOffset) > 1f;
 
             int statsBoxWidth = equipmentBoxWidth;
             int statsBoxHeight = 220;
@@ -822,20 +896,15 @@ namespace Proximity.Content
             int statsBoxY = equipmentBoxY + equipmentBoxHeight + (int)statsBoxOffset;
             Rectangle statsBoxRect = new Rectangle(statsBoxX, statsBoxY, statsBoxWidth, statsBoxHeight);
 
-            if (statBoxTexture != null)
-            {
-                DrawNineSliceBox(spriteBatch, statBoxTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
-                DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
-            }
+            DrawNineSliceBox(spriteBatch, statBoxTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
+            DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
 
-            DrawNineSliceBox(spriteBatch, statBoxTexture, equipmentBoxRect, StatBoxSpriteSize, Color.White, false);
-
-            int statsY = equipmentBoxY + 30;
-            int statsX = equipmentBoxX + SlotSize + 60;
+            int statsY = statsBoxY + 20;
+            int statsX = statsBoxX + 20;
             int statSpacingX = StatIconSize + 5;
             int statSpacingY = 30;
 
-            for (int i = 0; i <= 6; i++)
+            for (int i = 0; i <= 5; i++)
             {
                 string statText = i switch
                 {
@@ -844,15 +913,16 @@ namespace Proximity.Content
                     2 => player.Damage.ToString(),
                     3 => player.Knockback.ToString(),
                     4 => player.Defense.ToString(),
-                    5 => player.KnockbackResistance.ToString(),
-                    6 => player.ShootSpeed.ToString(),
-                    _ => "Unknown Stat" // Default width for other characters
+                    5 => (player.KnockbackResistance * 100f).ToString() + "%",
+                    _ => "Unknown Stat"
                 };
 
                 Rectangle statsIconSrc = new Rectangle(0, i * StatIconSize, StatIconSize, StatIconSize);
                 spriteBatch.Draw(statIconsTexture, new Vector2(statsX, statsY + i * statSpacingY), statsIconSrc, Color.White);
                 font.DrawString(spriteBatch, statText, new Vector2(statsX + statSpacingX, statsY + i * statSpacingY + 2), Color.White);
             }
+
+            DrawNineSliceBox(spriteBatch, statBoxTexture, equipmentBoxRect, StatBoxSpriteSize, Color.White, false);
 
             int eqSlotSize = 100;
             int eqSlotPaddingY = 30;
@@ -920,13 +990,205 @@ namespace Proximity.Content
                     }
                 }
             }
+
+            for (int i = 0; i <= 4; i++)
+            {
+                float targetOffsetSort = (chosenSortingMethod == i) ? TARGET_OFFSET : 0f;
+                sortBoxOffsets[i] = MathHelper.Lerp(
+                    sortBoxOffsets[i],
+                    targetOffsetSort,
+                    STATS_ANIMATION_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds
+                );
+
+                int buttonWidth = slotWidth / 2;
+                int buttonHeight = slotHeight / 2;
+                int buttonX = (screenWidth - (slotWidth * Columns)) / 2 + buttonWidth * i;
+                int buttonY = (int)((screenHeight - (slotHeight * VisibleRows)) / 2 - buttonHeight - sortBoxOffsets[i]);
+
+                Rectangle buttonRect = new Rectangle(
+                    buttonX,
+                    buttonY,
+                    buttonWidth,
+                    (int)(buttonHeight + sortBoxOffsets[i])
+                );
+
+                // Pick color
+                Color buttonColor = i switch
+                {
+                    0 => Color.LightCoral,
+                    1 => Color.LightSkyBlue,
+                    2 => Color.LightGoldenrodYellow,
+                    3 => Color.Coral,
+                    4 => Color.LightGreen,
+                    _ => Color.Black
+                };
+
+                // Draw button background
+                spriteBatch.Draw(Main.Pixel, buttonRect, buttonColor);
+
+                // Draw borders
+                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, buttonWidth, 2), Color.White); // Top
+                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, 2, buttonHeight), Color.White); // Left
+                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY + buttonHeight - 2, buttonWidth, 2), Color.Black); // Bottom
+                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX + buttonWidth - 2, buttonY, 2, buttonHeight), Color.Black); // Right
+
+                // Draw icon
+                int textureID = i switch
+                {
+                    0 => 2,  // Damage
+                    1 => 4,  // Defense
+                    2 => 8,  // Value/Gold
+                    3 => 10, // Rarity
+                    4 => 9,  // Item Type
+                    _ => -1
+                };
+                Rectangle statsIconSrc = new Rectangle(0, textureID * StatIconSize, StatIconSize, StatIconSize);
+                spriteBatch.Draw(statIconsTexture, new Vector2(
+                    buttonX + (buttonWidth - StatIconSize) / 2,
+                    buttonY + (buttonHeight - StatIconSize) / 2
+                ), statsIconSrc, Color.White);
+            }
         }
 
-        private int previousWheelValue = 0;
+        #region Helper Methods
+
+        public Item GetItem(int slot) => (slot >= 0 && slot < TotalSlots) ? items[slot] : null;
+
+        public void SetItem(int slot, Item item)
+        {
+            if (slot >= 0 && slot < TotalSlots) items[slot] = item;
+        }
+
+        public int SlotWidth => slotWidth;
+
+        private static readonly Dictionary<string, EquipmentSlot> ItemTypeMap = new Dictionary<string, EquipmentSlot>
+        {
+            ["sword"] = EquipmentSlot.Weapon,
+            ["staff"] = EquipmentSlot.Weapon,
+            ["gun"] = EquipmentSlot.Weapon,
+            ["weapon"] = EquipmentSlot.Weapon,
+            ["helmet"] = EquipmentSlot.Helmet,
+            ["chestplate"] = EquipmentSlot.Chestplate,
+            ["offhand"] = EquipmentSlot.Offhand
+        };
+
+        private EquipmentSlot? GetEquipmentSlotForItem(Item item)
+        {
+            if (item?.Type == null) return null;
+            string type = item.Type.ToLower();
+            return ItemTypeMap.FirstOrDefault(kvp => type.Contains(kvp.Key)).Value;
+        }
+
+        private static readonly Dictionary<string, Func<Item, float>> StatExtractors = new Dictionary<string, Func<Item, float>>
+        {
+            ["damage"] = item => item.Damage,
+            ["defense"] = item => item.Defense,
+            ["knockback"] = item => item.Knockback,
+            ["range"] = item => item.ShootSpeed,
+            ["uses per second"] = item => item.UseTime > 0 ? 1f / item.UseTime : 0f,
+            ["knockback resistance"] = item => item.KnockbackResistance,
+            ["gold"] = item => item.Value
+        };
+
+        private Color GetStatComparisonColor(string statText, Item item, Player player, int slotIdx)
+        {
+            if (slotIdx < 0) return Color.White;
+            var targetSlot = GetEquipmentSlotForItem(item);
+            if (!targetSlot.HasValue || !player.EquippedItems.TryGetValue(targetSlot.Value, out var equipped) || equipped == null) return Color.White;
+
+            var statKey = StatExtractors.Keys.FirstOrDefault(key => statText.Contains(key) && (key != "knockback" || !statText.Contains("resistance")));
+            if (statKey == null) return Color.White;
+
+            float itemStat = StatExtractors[statKey](item);
+            float equippedStat = StatExtractors[statKey](equipped);
+            return itemStat > equippedStat ? Color.LightGreen : itemStat < equippedStat ? Color.LightCoral : Color.White;
+        }
+
+        private void SortInventory()
+        {
+            if (chosenSortingMethod < 0 || chosenSortingMethod > 4) return;
+
+            // Create list of non-null items with their original indices
+            var itemsWithIndices = new List<(Item item, int originalIndex)>();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null)
+                {
+                    itemsWithIndices.Add((items[i], i));
+                }
+            }
+
+            // Sort based on chosen method (descending order - best items first)
+            switch (chosenSortingMethod)
+            {
+                case 0: // Damage
+                    itemsWithIndices.Sort((a, b) => b.item.Damage.CompareTo(a.item.Damage));
+                    break;
+
+                case 1: // Defense
+                    itemsWithIndices.Sort((a, b) => b.item.Defense.CompareTo(a.item.Defense));
+                    break;
+
+                case 2: // Value
+                    itemsWithIndices.Sort((a, b) => b.item.Value.CompareTo(a.item.Value));
+                    break;
+
+                case 3: // Rarity
+                    itemsWithIndices.Sort((a, b) => b.item.Rarity.CompareTo(a.item.Rarity));
+                    break;
+
+                case 4: // Item Type
+                    itemsWithIndices.Sort((a, b) => string.Compare(a.item.Type ?? "", b.item.Type ?? "", StringComparison.OrdinalIgnoreCase));
+                    break;
+            }
+
+            // Clear inventory
+            for (int i = 0; i < items.Count; i++)
+            {
+                items[i] = null;
+            }
+
+            // Place sorted items back starting from the beginning
+            for (int i = 0; i < itemsWithIndices.Count; i++)
+            {
+                items[i] = itemsWithIndices[i].item;
+            }
+
+            // Update selected item slot if an item was selected
+            if (selectedItemSlot.HasValue && selectedItemSlot.Value >= 0)
+            {
+                var selectedItem = itemsWithIndices.FirstOrDefault(x => x.originalIndex == selectedItemSlot.Value).item;
+                if (selectedItem != null)
+                {
+                    // Find new position of the selected item
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        if (items[i] == selectedItem)
+                        {
+                            selectedItemSlot = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    selectedItemSlot = null;
+                }
+            }
+        }
+
+        #endregion Helper Methods
 
         public void Update(TouchCollection touches, Player player)
         {
             if (!IsOpen) return;
+
+            // Check if sorting method changed and trigger sort
+            if (chosenSortingMethod != previousSortingMethod && chosenSortingMethod >= 0)
+            {
+                SortInventory();
+                previousSortingMethod = chosenSortingMethod;
+            }
             bool mouseClicked = false;
             Point mousePoint = Point.Zero;
             // PC: Mouse click and wheel support for item selection and scrolling
@@ -1165,23 +1427,26 @@ namespace Proximity.Content
                         int statsButtonY = equipmentBoxY - statsButtonHeight;
                         Rectangle statsButtonRect = new Rectangle(statsButtonX, statsButtonY, statsButtonWidth, statsButtonHeight);
 
-                        if (statsButtonRect.Contains((int)inputPos.X, (int)inputPos.Y) && !isAnimating)
+                        if (statsButtonRect.Contains((int)inputPos.X, (int)inputPos.Y) && !isAnimatingStats)
                         {
                             isStatsVisible = !isStatsVisible;
-                            return;
                         }
 
-                        // Block interaction with stats box during animation
-                        int statsBoxWidth = equipmentBoxWidth;
-                        int statsBoxHeight = 220;
-                        int statsBoxX = equipmentBoxX;
-                        int statsBoxY = equipmentBoxY + equipmentBoxHeight + (int)statsBoxOffset;
-                        Rectangle statsBoxRect = new Rectangle(statsBoxX, statsBoxY, statsBoxWidth, statsBoxHeight);
-
-                        if (isAnimating && statsBoxRect.Contains((int)inputPos.X, (int)inputPos.Y))
+                        for (int i = 0; i <= 4; i++)
                         {
-                            return;
+                            int sortButtonWidth = slotWidth / 2;
+                            int sortButtonHeight = slotHeight / 2;
+                            int sortButtonX = (screenWidth - (slotWidth * Columns)) / 2 + sortButtonWidth * i;
+                            int sortButtonY = (screenHeight - (slotHeight * VisibleRows)) / 2 - sortButtonHeight;
+
+                            Rectangle sortButtonRect = new Rectangle(sortButtonX, sortButtonY, sortButtonWidth, sortButtonHeight);
+
+                            if (sortButtonRect.Contains((int)inputPos.X, (int)inputPos.Y))
+                            {
+                                chosenSortingMethod = i;
+                            }
                         }
+
                         int eqSlotSize = 120;
                         int eqSlotPaddingY = 30;
                         int eqSlotPaddingX = 40;
@@ -1298,13 +1563,6 @@ namespace Proximity.Content
             }
         }
 
-        public Item GetItem(int slot) => (slot >= 0 && slot < TotalSlots) ? items[slot] : null;
-
-        public void SetItem(int slot, Item item)
-        { if (slot >= 0 && slot < TotalSlots) items[slot] = item; }
-
-        public int SlotWidth => slotWidth;
-
         public void TryPickingItem(Player player, List<ItemDrop> drops, FloatingTextManager floatingTextManager)
         {
             var playerHitbox = player.Hitbox;
@@ -1374,7 +1632,7 @@ namespace Proximity.Content
             return false;
         }
 
-        private static DateTime portraitStartTime = DateTime.Now;
+        #region Portrait Rendering
 
         private void RenderPlayerPortrait(GraphicsDevice graphicsDevice, Player player, GameTime gameTime)
         {
@@ -1504,7 +1762,8 @@ namespace Proximity.Content
                 // Draw particles with identity camera (no transform)
                 var identityCamera = new Camera(Vector2.Zero, PortraitSize, PortraitSize * 2);
                 // Position camera to center particles on player in portrait
-                identityCamera.Position = new Vector2(player.Position.X - PortraitSize / 2 - 60, player.Position.Y - PortraitSize);
+                identityCamera.Position = Vector2.Zero;
+                identityCamera.Zoom = 1.0f; // Ensure true 1:1 coordinate system
                 portraitParticleManager.Draw(portraitBatch.GraphicsDevice, identityCamera, 2);
                 portraitParticleManager.Draw(portraitBatch.GraphicsDevice, identityCamera, 0);
 
@@ -1615,48 +1874,9 @@ namespace Proximity.Content
                 graphicsDevice.SetRenderTarget(null);
         }
 
-        private static readonly Dictionary<string, EquipmentSlot> ItemTypeMap = new Dictionary<string, EquipmentSlot>
-        {
-            ["sword"] = EquipmentSlot.Weapon,
-            ["staff"] = EquipmentSlot.Weapon,
-            ["gun"] = EquipmentSlot.Weapon,
-            ["weapon"] = EquipmentSlot.Weapon,
-            ["helmet"] = EquipmentSlot.Helmet,
-            ["chestplate"] = EquipmentSlot.Chestplate,
-            ["offhand"] = EquipmentSlot.Offhand
-        };
+        #endregion Portrait Rendering
 
-        private EquipmentSlot? GetEquipmentSlotForItem(Item item)
-        {
-            if (item?.Type == null) return null;
-            string type = item.Type.ToLower();
-            return ItemTypeMap.FirstOrDefault(kvp => type.Contains(kvp.Key)).Value;
-        }
-
-        private static readonly Dictionary<string, Func<Item, float>> StatExtractors = new Dictionary<string, Func<Item, float>>
-        {
-            ["damage"] = item => item.Damage,
-            ["defense"] = item => item.Defense,
-            ["knockback"] = item => item.Knockback,
-            ["range"] = item => item.ShootSpeed,
-            ["uses per second"] = item => item.UseTime > 0 ? 1f / item.UseTime : 0f,
-            ["knockback resistance"] = item => item.KnockbackResistance,
-            ["gold"] = item => item.Value
-        };
-
-        private Color GetStatComparisonColor(string statText, Item item, Player player, int slotIdx)
-        {
-            if (slotIdx < 0) return Color.White;
-            var targetSlot = GetEquipmentSlotForItem(item);
-            if (!targetSlot.HasValue || !player.EquippedItems.TryGetValue(targetSlot.Value, out var equipped) || equipped == null) return Color.White;
-
-            var statKey = StatExtractors.Keys.FirstOrDefault(key => statText.Contains(key) && (key != "knockback" || !statText.Contains("resistance")));
-            if (statKey == null) return Color.White;
-
-            float itemStat = StatExtractors[statKey](item);
-            float equippedStat = StatExtractors[statKey](equipped);
-            return itemStat > equippedStat ? Color.LightGreen : itemStat < equippedStat ? Color.LightCoral : Color.White;
-        }
+        #region Nine Slice Box Drawing
 
         private void DrawNineSliceBox(SpriteBatch spriteBatch, Texture2D texture, Rectangle dest, int spriteSize, Color color, bool keepCenterClear = false)
         {
@@ -1721,5 +1941,7 @@ namespace Proximity.Content
                 }
             }
         }
+
+        #endregion Nine Slice Box Drawing
     }
 }

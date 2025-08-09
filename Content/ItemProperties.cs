@@ -302,12 +302,12 @@ namespace Proximity.Content
 
         private static void InitializePrefixes()
         {
-            Prefixes.Add(1, new Prefix(1, "Sharp", "Increases damage by 10%") { ShootSpeedBonus = 10f });
+            Prefixes.Add(1, new Prefix(1, "Sharp", "Increases damage by 10%") { ShootSpeedBonus = 1f });
         }
 
         private static void InitializeSuffixes()
         {
-            Suffixes.Add(1, new Suffix(1, "of Power", "Increases all stats by 5%") { ShootSpeedBonus = 10f });
+            Suffixes.Add(1, new Suffix(1, "of Power", "Increases all stats by 5%") { ShootSpeedBonus = 1f });
         }
     }
 
