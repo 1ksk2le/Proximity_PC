@@ -793,7 +793,7 @@ namespace Proximity.Content
 
         public float CalculateHeadRotation()
         {
-            if (!IsKnocked)
+            if (!IsKnocked && !Main.InventoryOpen)
             {
                 Vector2 direction = Joystick_Attack.Direction != Vector2.Zero ? Joystick_Attack.Direction : MovementDirection;
                 if (direction != Vector2.Zero)

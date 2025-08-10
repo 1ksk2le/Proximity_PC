@@ -17,11 +17,11 @@ namespace Proximity.Content.Items
         protected override void Initialize()
         {
             ID = 15;
-            Rarity = 2;
+            Rarity = 4;
             Name = "Squirt Toy";
             Lore = "'Great at washing distant memories away'";
             Type = "[Weapon - Pistol]";
-            Info = "Sprays water jets that do little harm";
+            Info = "Sprays water jets at random directions";
             Value = 2000;
             Damage = 2;
             UseTime = 0.1f;

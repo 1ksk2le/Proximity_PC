@@ -356,6 +356,18 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Particles/t_Particle_8.png
 
+#begin Textures/Particles/t_Particle_9.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Particles/t_Particle_9.png
+
 #begin Textures/Player/t_Player_Body.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -631,6 +643,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/UI/t_Inventory_Icons.png
+
+#begin Textures/UI/t_Inventory_Seperator.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/UI/t_Inventory_Seperator.png
 
 #begin Textures/UI/t_Inventory_StarSmall.png
 /importer:TextureImporter

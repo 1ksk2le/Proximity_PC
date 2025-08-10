@@ -17,7 +17,7 @@ namespace Proximity.Content
         public const int TotalSlots = Columns * Rows;
         public const int VisibleRows = 5;
         public const int VisibleSlots = Columns * VisibleRows;
-        private const int SlotSize = 100;
+        private const int SlotSize = 120;
         private const int StatBoxSpriteSize = 45;
         private const int StatIconSize = 30;
         private const int StarSmallIconSize = 33;
@@ -44,11 +44,12 @@ namespace Proximity.Content
 
         private readonly Texture2D slotTexture;
         private readonly Texture2D thumbTexture;
-        private readonly Texture2D statBoxTexture;
-        private readonly Texture2D statBoxOutlineTexture;
-        private readonly Texture2D statBoxOutlineTextureReversed;
+        private readonly Texture2D slotBoxTexture;
+        private readonly Texture2D slotBoxOutlineTexture;
+        private readonly Texture2D slotBoxOutlineReversedTexture;
         private readonly Texture2D statIconsTexture;
         private readonly Texture2D starTexture;
+        private readonly Texture2D seperatorTexture;
 
         #endregion Textures
 
@@ -89,7 +90,6 @@ namespace Proximity.Content
         #region Sorting Animation
 
         private float[] sortBoxOffsets = new float[5];
-        private const float TARGET_OFFSET = 50f;
         private int chosenSortingMethod = 3;
         private int previousSortingMethod = -1;
 
@@ -141,14 +141,13 @@ namespace Proximity.Content
 
             // Load required texture
             slotTexture = content.Load<Texture2D>("Textures/UI/t_Inventory");
-
-            // Load optional textures with fallbacks
             thumbTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Thumb", slotTexture);
-            statBoxTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box", null);
-            statBoxOutlineTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline", null);
-            statBoxOutlineTextureReversed = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline_Reversed", null);
+            slotBoxTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box", null);
+            slotBoxOutlineTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline", null);
+            slotBoxOutlineReversedTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Box_Outline_Reversed", null);
             statIconsTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Icons", null);
             starTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_StarSmall", null);
+            seperatorTexture = LoadTextureWithFallback(content, "Textures/UI/t_Inventory_Seperator", null);
 
             // Initialize portrait system
             portraitParticleManager = new ParticleManager(content);
@@ -179,11 +178,12 @@ namespace Proximity.Content
 
         private void EnsurePlayerPortraitRenderTarget(GraphicsDevice graphicsDevice)
         {
-            int portraitHeight = PortraitSize * 2;
-            if (IsRenderTargetInvalid(playerPortraitRenderTarget, PortraitSize, portraitHeight))
+            int portraitWidth = 570;
+            int portraitHeight = 600;
+            if (IsRenderTargetInvalid(playerPortraitRenderTarget, portraitWidth, portraitHeight))
             {
                 playerPortraitRenderTarget?.Dispose();
-                playerPortraitRenderTarget = CreateRenderTarget(graphicsDevice, PortraitSize, portraitHeight);
+                playerPortraitRenderTarget = CreateRenderTarget(graphicsDevice, portraitWidth, portraitHeight);
             }
 
             InitializePortraitParticleManager(graphicsDevice);
@@ -262,6 +262,33 @@ namespace Proximity.Content
             var prevRenderTargets = graphicsDevice.GetRenderTargets();
             graphicsDevice.SetRenderTarget(inventoryRenderTarget);
             graphicsDevice.Clear(Color.Transparent);
+
+            for (int i = 0; i <= 4; i++)
+            {
+                float targetOffsetSort = (chosenSortingMethod == i) ? 85 : 0f;
+                sortBoxOffsets[i] = MathHelper.Lerp(
+                    sortBoxOffsets[i],
+                    targetOffsetSort,
+                    STATS_ANIMATION_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds
+                );
+
+                int buttonWidth = seperatorTexture.Width / 5;
+                int buttonHeight = seperatorTexture.Height;
+                int buttonX = (screenWidth - (slotWidth * Columns)) / 2 + buttonWidth * i + 5;
+                int buttonY = (int)((screenHeight - (slotHeight * VisibleRows)) / 2 - buttonHeight - sortBoxOffsets[i]) + 85;
+
+                Rectangle buttonRect = new Rectangle(
+                    buttonX,
+                    buttonY,
+                    buttonWidth,
+                    (int)(buttonHeight + sortBoxOffsets[i])
+                );
+
+                Rectangle destRect = new Rectangle(buttonX + i * 10, buttonY, seperatorTexture.Width / 5, seperatorTexture.Height);
+                Rectangle srcRect = new Rectangle(i * seperatorTexture.Width / 5, 0, seperatorTexture.Width / 5, seperatorTexture.Height);
+                spriteBatch.Draw(seperatorTexture, destRect, srcRect, Color.White);
+            }
+
             using (SpriteBatch rtBatch = new SpriteBatch(graphicsDevice))
             {
                 rtBatch.Begin();
@@ -281,11 +308,11 @@ namespace Proximity.Content
                         Color slotColor = Color.White;
                         int rarity = item != null ? item.Rarity : 0;
                         if (rarity < 0 || rarity > 6) rarity = 0;
-                        Rectangle srcRect = new Rectangle(0, 0, SlotSize, SlotSize);
+                        Rectangle srcRect = new Rectangle(0, rarity * SlotSize, SlotSize, SlotSize);
                         rtBatch.Draw(slotTexture, destRect, srcRect, slotColor);
                         if (item != null && item.Texture != null)
                         {
-                            int itemAreaSize = 100;
+                            int itemAreaSize = 120;
                             int itemAreaOffset = (slotWidth - itemAreaSize) / 2;
                             var tex = item.Texture;
                             int srcW = tex.Width;
@@ -313,8 +340,6 @@ namespace Proximity.Content
                 graphicsDevice.SetRenderTarget(prevRenderTargets[0].RenderTarget as RenderTarget2D);
             else
                 graphicsDevice.SetRenderTarget(null);
-
-            //DRAW SORT ICONS
 
             int startY = (screenHeight - (slotHeight * VisibleRows)) / 2;
             int startX = (screenWidth - (slotWidth * Columns)) / 2;
@@ -697,10 +722,10 @@ namespace Proximity.Content
                     }
                     spriteBatch.GraphicsDevice.SetRenderTarget(null);
                     // --- Draw icon box (fixed at top of info region) ---
-                    if (statBoxTexture != null && selected.Texture != null)
+                    if (slotBoxTexture != null && selected.Texture != null)
                     {
                         // Make icon box width match info box width
-                        DrawNineSliceBox(spriteBatch, statBoxTexture, new Rectangle(infoRegionX, infoRegionY, infoBoxWidth, iconBoxHeight + IconBoxPadding), StatBoxSpriteSize, rarityInfo.Color);
+                        DrawNineSliceBox(spriteBatch, slotBoxTexture, new Rectangle(infoRegionX, infoRegionY, infoBoxWidth, iconBoxHeight + IconBoxPadding), StatBoxSpriteSize, rarityInfo.Color);
 
                         // Draw rarity text 10px below the icon box top, centered
                         if (!string.IsNullOrEmpty(rarityText))
@@ -752,9 +777,9 @@ namespace Proximity.Content
 
                     Rectangle infoContentDestRect = new Rectangle(infoContentX, infoContentY, infoBoxWidth, visibleHeight);
                     Rectangle infoContentSrcRect = new Rectangle(0, (int)infoBoxScrollOffset, infoBoxWidth, visibleHeight);
-                    if (statBoxTexture != null)
+                    if (slotBoxTexture != null)
                     {
-                        DrawNineSliceBox(spriteBatch, statBoxTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
+                        DrawNineSliceBox(spriteBatch, slotBoxTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
                     }
                     spriteBatch.Draw(infoBoxRenderTarget, infoContentDestRect, infoContentSrcRect, Color.White);
                     // --- Draw scrollbar for info content if needed ---
@@ -803,7 +828,7 @@ namespace Proximity.Content
                         }
                     }
 
-                    DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
+                    DrawNineSliceBox(spriteBatch, slotBoxOutlineTexture, infoContentDestRect, StatBoxSpriteSize, Color.White);
 
                     // Draw equip/unequip button above info box
                     bool isEquippedItem = slotIdx < 0;
@@ -886,20 +911,20 @@ namespace Proximity.Content
             font.DrawString(spriteBatch, statsButtonText, statsTextPos, Color.White);
 
             // Update stats box animation
-            float targetOffset = isStatsVisible ? 0f : -220f;
+            float targetOffset = isStatsVisible ? 0f : -205f;
             statsBoxOffset = MathHelper.Lerp(statsBoxOffset, targetOffset, STATS_ANIMATION_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds);
             isAnimatingStats = Math.Abs(statsBoxOffset - targetOffset) > 1f;
 
             int statsBoxWidth = equipmentBoxWidth;
-            int statsBoxHeight = 220;
+            int statsBoxHeight = 205;
             int statsBoxX = equipmentBoxX;
             int statsBoxY = equipmentBoxY + equipmentBoxHeight + (int)statsBoxOffset;
             Rectangle statsBoxRect = new Rectangle(statsBoxX, statsBoxY, statsBoxWidth, statsBoxHeight);
 
-            DrawNineSliceBox(spriteBatch, statBoxTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
-            DrawNineSliceBox(spriteBatch, statBoxOutlineTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
+            DrawNineSliceBox(spriteBatch, slotBoxTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
+            DrawNineSliceBox(spriteBatch, slotBoxOutlineTexture, statsBoxRect, StatBoxSpriteSize, Color.White);
 
-            int statsY = statsBoxY + 20;
+            int statsY = statsBoxY + 15;
             int statsX = statsBoxX + 20;
             int statSpacingX = StatIconSize + 5;
             int statSpacingY = 30;
@@ -922,9 +947,9 @@ namespace Proximity.Content
                 font.DrawString(spriteBatch, statText, new Vector2(statsX + statSpacingX, statsY + i * statSpacingY + 2), Color.White);
             }
 
-            DrawNineSliceBox(spriteBatch, statBoxTexture, equipmentBoxRect, StatBoxSpriteSize, Color.White, false);
+            DrawNineSliceBox(spriteBatch, slotBoxTexture, equipmentBoxRect, StatBoxSpriteSize, Color.White, false);
 
-            int eqSlotSize = 100;
+            int eqSlotSize = SlotSize;
             int eqSlotPaddingY = 30;
             int eqSlotPaddingX = 40;
             int eqSlotGapY = ((equipmentBoxHeight - eqSlotPaddingY * 2) - (eqSlotSize * 4)) / 3;
@@ -963,7 +988,7 @@ namespace Proximity.Content
                     int rarity = equipped != null ? equipped.Rarity : 0;
                     if (rarity < 0 || rarity > 6) rarity = 0;
                     var rarityInfo = equipped != null ? Item.GetRarityInfo(equipped.Rarity) : Item.GetRarityInfo(0);
-                    Rectangle eqSlotSrcRect = new Rectangle(0, 0, eqSlotSize, eqSlotSize);
+                    Rectangle eqSlotSrcRect = new Rectangle(0, rarity * eqSlotSize, eqSlotSize, eqSlotSize);
                     Rectangle eqSlotRect = new Rectangle(slotX, slotY, eqSlotSize, eqSlotSize);
                     spriteBatch.Draw(slotTexture, eqSlotRect, eqSlotSrcRect, Color.White);
                     if (equipped != null && equipped.Texture != null)
@@ -989,64 +1014,6 @@ namespace Proximity.Content
                         spriteBatch.Draw(tex, drawRect, Color.White);
                     }
                 }
-            }
-
-            for (int i = 0; i <= 4; i++)
-            {
-                float targetOffsetSort = (chosenSortingMethod == i) ? TARGET_OFFSET : 0f;
-                sortBoxOffsets[i] = MathHelper.Lerp(
-                    sortBoxOffsets[i],
-                    targetOffsetSort,
-                    STATS_ANIMATION_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds
-                );
-
-                int buttonWidth = slotWidth / 2;
-                int buttonHeight = slotHeight / 2;
-                int buttonX = (screenWidth - (slotWidth * Columns)) / 2 + buttonWidth * i;
-                int buttonY = (int)((screenHeight - (slotHeight * VisibleRows)) / 2 - buttonHeight - sortBoxOffsets[i]);
-
-                Rectangle buttonRect = new Rectangle(
-                    buttonX,
-                    buttonY,
-                    buttonWidth,
-                    (int)(buttonHeight + sortBoxOffsets[i])
-                );
-
-                // Pick color
-                Color buttonColor = i switch
-                {
-                    0 => Color.LightCoral,
-                    1 => Color.LightSkyBlue,
-                    2 => Color.LightGoldenrodYellow,
-                    3 => Color.Coral,
-                    4 => Color.LightGreen,
-                    _ => Color.Black
-                };
-
-                // Draw button background
-                spriteBatch.Draw(Main.Pixel, buttonRect, buttonColor);
-
-                // Draw borders
-                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, buttonWidth, 2), Color.White); // Top
-                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY, 2, buttonHeight), Color.White); // Left
-                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX, buttonY + buttonHeight - 2, buttonWidth, 2), Color.Black); // Bottom
-                spriteBatch.Draw(Main.Pixel, new Rectangle(buttonX + buttonWidth - 2, buttonY, 2, buttonHeight), Color.Black); // Right
-
-                // Draw icon
-                int textureID = i switch
-                {
-                    0 => 2,  // Damage
-                    1 => 4,  // Defense
-                    2 => 8,  // Value/Gold
-                    3 => 10, // Rarity
-                    4 => 9,  // Item Type
-                    _ => -1
-                };
-                Rectangle statsIconSrc = new Rectangle(0, textureID * StatIconSize, StatIconSize, StatIconSize);
-                spriteBatch.Draw(statIconsTexture, new Vector2(
-                    buttonX + (buttonWidth - StatIconSize) / 2,
-                    buttonY + (buttonHeight - StatIconSize) / 2
-                ), statsIconSrc, Color.White);
             }
         }
 
@@ -1381,6 +1348,7 @@ namespace Proximity.Content
                                                 items[i] = equippedItem;
                                                 equipment[slot] = null;
                                                 selectedItemSlot = null;
+                                                SortInventory();
                                                 return;
                                             }
                                         }
@@ -1397,6 +1365,7 @@ namespace Proximity.Content
                                         selectedItemSlot = null;
                                     }
                                 }
+                                SortInventory();
                                 return;
                             }
                         }
@@ -1434,8 +1403,8 @@ namespace Proximity.Content
 
                         for (int i = 0; i <= 4; i++)
                         {
-                            int sortButtonWidth = slotWidth / 2;
-                            int sortButtonHeight = slotHeight / 2;
+                            int sortButtonWidth = seperatorTexture.Width / 5;
+                            int sortButtonHeight = seperatorTexture.Height;
                             int sortButtonX = (screenWidth - (slotWidth * Columns)) / 2 + sortButtonWidth * i;
                             int sortButtonY = (screenHeight - (slotHeight * VisibleRows)) / 2 - sortButtonHeight;
 
@@ -1935,9 +1904,9 @@ namespace Proximity.Content
 
                 // Middle vertical gap
                 Rectangle gapRect = new Rectangle(gapX, gapY, gapWidth, gapHeight);
-                if (statBoxOutlineTextureReversed != null && texture == statBoxTexture)
+                if (slotBoxOutlineReversedTexture != null && texture == slotBoxTexture)
                 {
-                    DrawNineSliceBox(spriteBatch, statBoxOutlineTextureReversed, gapRect, spriteSize, Color.White, false);
+                    DrawNineSliceBox(spriteBatch, slotBoxOutlineReversedTexture, gapRect, spriteSize, Color.White, false);
                 }
             }
         }
