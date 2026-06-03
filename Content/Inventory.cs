@@ -1071,7 +1071,7 @@ namespace Proximity.Content
             return itemStat > equippedStat ? Color.LightGreen : itemStat < equippedStat ? Color.LightCoral : Color.White;
         }
 
-        private void SortInventory()
+        public void SortInventory()
         {
             if (chosenSortingMethod < 0 || chosenSortingMethod > 4) return;
 

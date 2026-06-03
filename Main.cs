@@ -166,12 +166,14 @@ namespace Proximity
 
             if (InputManager.Instance.IsKeySinglePress(Keys.I))
             {
+                inventory.SortInventory();
                 inventory.IsOpen = !inventory.IsOpen;
             }
 
             bool currentInventoryTouch = touches.IsTouching(inventoryButtonRectangle);
             if (currentInventoryTouch && !inventoryButtonTouchState)
             {
+                inventory.SortInventory();
                 inventory.IsOpen = !inventory.IsOpen;
             }
             inventoryButtonTouchState = currentInventoryTouch;
